@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE VERT — Architect | Live 3D Buildings, Equipment & AI Assistant</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{fontFamily:{syne:['Syne','sans-serif'],sans:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
+<style>html{scroll-behavior:smooth}body{overscroll-behavior:none}input[type=range]{accent-color:#facc15}.no-scrollbar::-webkit-scrollbar{display:none}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body class="bg-[#070707] text-white font-sans antialiased">
+
+<nav class="fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur-2xl">
+  <div class="max-w-[1600px] mx-auto px-6 lg:px-10 h-[68px] flex items-center justify-between">
+    <div class="flex items-center gap-3"><div class="w-9 h-9 bg-yellow-400 text-black font-syne font-800 text-[18px] flex items-center justify-center rounded-[9px]">V</div><div><div class="font-syne font-800 text-[18px] leading-none tracking-tight">THE <span class="text-yellow-400">VERT</span></div><div class="text-[9px] font-mono tracking-[0.2em] text-white/40">ARCHITECTURE STUDIO</div></div></div>
+    <div class="hidden lg:flex items-center gap-7 text-[11px] font-mono tracking-widest text-white/50">
+      <a href="#work" class="hover:text-white">WORK</a><a href="#lab" class="hover:text-white">LIVE LAB</a><a href="#products" class="hover:text-white">PRODUCTS</a><a href="#guides" class="hover:text-white">GUIDES</a>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="hidden md:flex items-center gap-2 text-[11px] font-mono text-white/40 mr-2"><span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>AI ONLINE</div>
+      <button id="openChatBtn" class="hidden md:flex px-4 py-2.5 bg-white/10 border border-white/15 rounded-full text-[11px] font-mono tracking-widest hover:bg-white/15">ASK AI →</button>
+      <a href="#contact" class="px-5 py-2.5 bg-yellow-400 text-black rounded-full text-[11px] font-bold tracking-widest hover:bg-yellow-300">GET QUOTE</a>
+    </div>
+  </div>
+</nav>
+
+<section class="relative min-h-[88vh] flex items-center pt-[68px] overflow-hidden">
+  <canvas id="heroCanvas" class="absolute inset-0 w-full h-full"></canvas>
+  <div class="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/20"></div>
+  <div class="absolute inset-0 bg-gradient-to-t from-[#070707] via-transparent to-transparent"></div>
+  <div class="relative z-10 max-w-[1600px] mx-auto px-6 lg:px-10 w-full grid lg:grid-cols-[1.15fr_0.85fr] gap-10 items-center py-16">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-yellow-400/10 border border-yellow-400/20 rounded-full text-[11px] font-mono tracking-widest text-yellow-400 mb-6"><span class="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse"></span>LIVE 3D EXPLODED BUILDINGS & EQUIPMENT</div>
+      <h1 class="font-syne font-800 text-[46px] lg:text-[74px] leading-[0.85] tracking-[-0.04em]">I MAKE<br><span class="text-transparent" style="-webkit-text-stroke:1.5px white">CONSTRUCTION</span><br><span class="text-yellow-400">CRYSTAL CLEAR</span></h1>
+      <p class="mt-6 text-[17px] leading-[1.5] text-white/60 max-w-[560px]">Clients can't read 2D plans. Contractors misinterpret. <span class="text-white">THE VERT fixes that.</span> Every building as live, explodable 3D — every bolt, layer, and product — so clients say YES faster.</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="#work" class="px-7 py-4 bg-yellow-400 text-black rounded-full font-bold text-[12px] tracking-widest hover:bg-yellow-300 flex items-center gap-2">SEE BUILDING SAMPLES <span class="w-5 h-5 bg-black text-yellow-400 rounded-full flex items-center justify-center">↗</span></a>
+        <a href="#lab" class="px-7 py-4 bg-white text-black rounded-full font-bold text-[12px] tracking-widest hover:bg-white/90">TRY LIVE LAB →</a>
+      </div>
+      <div class="mt-10 flex flex-wrap gap-8 border-t border-white/10 pt-6 max-w-[520px]">
+        <div><div class="font-syne font-800 text-[26px] leading-none">127%</div><div class="text-[11px] font-mono text-white/40 mt-1">FASTER APPROVAL WITH 3D</div></div>
+        <div><div class="font-syne font-800 text-[26px] leading-none">Live 3D</div><div class="text-[11px] font-mono text-white/40 mt-1">EXPLODED VIEW</div></div>
+        <div><div class="font-syne font-800 text-[26px] leading-none">24/7</div><div class="text-[11px] font-mono text-white/40 mt-1">AI ASSISTANT</div></div>
+      </div>
+    </div>
+    <div class="relative hidden lg:block h-[580px]">
+      <div class="absolute inset-0 bg-[#111]/80 backdrop-blur-xl rounded-[28px] border border-white/10 overflow-hidden">
+        <div class="p-5 flex justify-between items-center border-b border-white/10"><div class="flex items-center gap-2"><div class="w-2.5 h-2.5 bg-red-400 rounded-full"></div><div class="w-2.5 h-2.5 bg-yellow-400 rounded-full"></div><div class="w-2.5 h-2.5 bg-green-400 rounded-full"></div><span class="ml-3 font-mono text-[11px] text-white/50">BUILDING_LIVE.glb</span></div><div class="px-2.5 py-1 bg-green-400/15 text-green-400 rounded-full text-[10px] font-mono">● LIVE</div></div>
+        <div class="p-4"><div class="aspect-[4/3] bg-black rounded-2xl border border-white/10 overflow-hidden relative"><canvas id="miniCanvas" class="w-full h-full"></canvas><div class="absolute top-3 left-3 px-3 py-1.5 bg-black/70 backdrop-blur rounded-full text-[10px] font-mono">DRAG • SCROLL</div><div class="absolute bottom-3 right-3 px-3 py-1.5 bg-yellow-400 text-black rounded-full text-[10px] font-mono font-bold" id="miniLabel">LIVE 3D</div></div>
+          <div class="mt-4 grid grid-cols-3 gap-2"><div class="bg-white text-black rounded-xl p-3"><div class="text-[10px] font-mono opacity-60">PROJECT</div><div class="font-bold text-[12px]">Family House</div></div><div class="bg-white/5 border border-white/10 rounded-xl p-3"><div class="text-[10px] font-mono text-white/40">LAYERS</div><div class="font-bold text-[12px]">12 Layers</div></div><div class="bg-yellow-400 text-black rounded-xl p-3"><div class="text-[10px] font-mono opacity-70">STATUS</div><div class="font-bold text-[12px]">Approved ✓</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="work" class="border-t border-white/10 bg-[#0c0c0c]">
+  <div class="max-w-[1600px] mx-auto px-6 lg:px-10 py-16">
+    <div class="flex flex-wrap justify-between items-end gap-6 mb-10"><div><div class="font-mono text-[11px] tracking-[0.3em] text-yellow-400 mb-3">SELECTED WORK</div><h2 class="font-syne font-800 text-[36px] lg:text-[54px] leading-[0.9]">BUILDINGS<br><span class="text-white/20">EXPLODED</span></h2></div><div class="max-w-[420px] text-[14px] text-white/50">Each project delivered as live 3D exploded view. Clients see every layer and click any product.</div></div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="bg-[#111] border border-white/10 rounded-[24px] overflow-hidden hover:border-yellow-400/40 transition"><div class="aspect-[16/10] bg-gradient-to-br from-[#1a1a1a] to-black p-6 flex items-end relative"><div class="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_50%_20%,#facc15_0%,transparent_60%)]"></div><div class="relative z-10"><div class="px-2.5 py-1 bg-yellow-400 text-black rounded-full text-[10px] font-mono font-bold inline-block">LIVE 3D • 12 LAYERS</div><div class="font-syne font-700 text-[20px] leading-none mt-3">Family House — Timber</div><div class="text-[11px] font-mono text-white/50 mt-1">Foundation → Roof</div></div></div><div class="p-5"><div class="text-[13px] text-white/60">120m² family house. Exploded view shows foundation, timber walls, insulation, zinc roof.</div><button data-go="house" class="go-lab mt-4 w-full py-2.5 bg-white text-black rounded-full text-[11px] font-bold tracking-widest">EXPLODE LIVE →</button></div></div>
+      <div class="bg-[#111] border border-white/10 rounded-[24px] overflow-hidden hover:border-yellow-400/40 transition"><div class="aspect-[16/10] bg-gradient-to-br from-[#1e1a0a] to-black p-6 flex items-end relative"><div class="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_50%_20%,#fff_0%,transparent_60%)]"></div><div class="relative z-10"><div class="px-2.5 py-1 bg-white text-black rounded-full text-[10px] font-mono font-bold inline-block">COMMERCIAL • 8 LAYERS</div><div class="font-syne font-700 text-[20px] leading-none mt-3">Studio Loft</div><div class="text-[11px] font-mono text-white/50 mt-1">Steel + Glass</div></div></div><div class="p-5"><div class="text-[13px] text-white/60">450m² conversion. Steel skeleton and facade system as assembly guide.</div><button data-go="commercial" class="go-lab mt-4 w-full py-2.5 bg-white text-black rounded-full text-[11px] font-bold tracking-widest">EXPLODE LIVE →</button></div></div>
+      <div class="bg-[#111] border border-white/10 rounded-[24px] overflow-hidden hover:border-yellow-400/40 transition"><div class="aspect-[16/10] bg-gradient-to-br from-[#0a1a1a] to-black p-6 flex items-end relative"><div class="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_50%_20%,#ff6b00_0%,transparent_60%)]"></div><div class="relative z-10"><div class="px-2.5 py-1 bg-white/10 border border-white/20 text-white rounded-full text-[10px] font-mono font-bold inline-block">INDUSTRIAL</div><div class="font-syne font-700 text-[20px] leading-none mt-3">Warehouse</div><div class="text-[11px] font-mono text-white/50 mt-1">Concrete + Equipment</div></div></div><div class="p-5"><div class="text-[13px] text-white/60">1200m² logistics hall. Includes crane, compressor, excavator equipment.</div><button data-go="excavator" class="go-lab mt-4 w-full py-2.5 bg-yellow-400 text-black rounded-full text-[11px] font-bold tracking-widest">EXPLODE EQUIPMENT →</button></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="lab" class="border-t border-white/10 bg-[#0f0f0f]">
+  <div class="max-w-[1600px] mx-auto px-6 lg:px-10 py-10">
+    <div class="flex flex-wrap items-end justify-between gap-6 mb-6">
+      <div><div class="flex items-center gap-3 mb-3"><span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span><div class="font-mono text-[11px] tracking-[0.3em] text-green-400">THE VERT LAB — LIVE</div></div><h2 class="font-syne font-800 text-[32px] lg:text-[48px] leading-[0.9]">SHOW CLIENTS<br>EVERY <span class="text-yellow-400">BOLT & LAYER</span></h2></div>
+      <div class="flex gap-2"><button id="exportPng" class="px-4 py-2.5 bg-white/10 border border-white/15 rounded-full text-[11px] font-mono">EXPORT PNG</button><button id="exportGlb" class="px-5 py-2.5 bg-yellow-400 text-black rounded-full text-[11px] font-bold tracking-widest">EXPORT GLB</button></div>
+    </div>
+    <div class="grid lg:grid-cols-[280px_1fr_300px] gap-3 h-[720px] bg-black rounded-[24px] border border-white/10 overflow-hidden">
+      <div class="border-r border-white/10 bg-[#111] p-4 flex flex-col gap-4 overflow-y-auto no-scrollbar">
+        <div><div class="text-[11px] font-mono tracking-widest text-white/40 mb-3">BUILDING & EQUIPMENT</div>
+          <div class="grid gap-2">
+            <button data-model="house" class="model-btn active text-left p-3 rounded-xl bg-yellow-400 text-black"><div class="font-bold text-[12px]">🏠 House — 12 Layers</div><div class="text-[10px] opacity-70 font-mono">Foundation → Roof</div></button>
+            <button data-model="commercial" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[12px]">🏢 Commercial Frame</div><div class="text-[10px] text-white/50 font-mono">Steel + Glass</div></button>
+            <button data-model="scaffold" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[12px]">🏗️ Scaffold System</div><div class="text-[10px] text-white/50 font-mono">10 parts</div></button>
+            <button data-model="drill" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[12px]">🔧 Power Tools</div><div class="text-[10px] text-white/50 font-mono">8 parts</div></button>
+            <button data-model="excavator" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[12px]">🚜 Excavator</div><div class="text-[10px] text-white/50 font-mono">10 parts</div></button>
+            <button data-model="engine" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[12px]">⚙️ Engine/Compressor</div><div class="text-[10px] text-white/50 font-mono">18 parts</div></button>
+          </div>
+        </div>
+        <div><div class="text-[11px] font-mono tracking-widest text-white/40 mb-3">UPLOAD YOUR OWN</div>
+          <label class="block w-full p-3 border-2 border-dashed border-white/15 rounded-xl hover:border-yellow-400/50 hover:bg-yellow-400/5 cursor-pointer transition"><div class="text-center"><div class="text-lg">📦</div><div class="text-[11px] font-bold mt-1">Drop GLB / FBX</div><div class="text-[9px] font-mono text-white/40">From Revit, SketchUp</div></div><input type="file" id="fileInput" accept=".glb,.gltf,.fbx,.obj" class="hidden"></label>
+        </div>
+        <div class="mt-auto p-3 bg-white text-black rounded-xl"><div class="font-bold text-[11px]">💡 How architects win:</div><div class="text-[11px] mt-1 leading-snug opacity-70">Send client this link. They explode building themselves. Trust = signed contract.</div></div>
+      </div>
+      <div class="relative bg-[#0a0a0a] overflow-hidden">
+        <canvas id="canvas" class="w-full h-full block"></canvas>
+        <div class="absolute top-3 left-3 flex gap-2"><div class="px-3 py-1.5 bg-white/90 text-black rounded-full text-[11px] font-mono flex gap-3"><span>PARTS: <b id="statParts">12</b></span><span>TRIS: <b id="statTris">0k</b></span><span>FPS: <b id="statFps">60</b></span></div></div>
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-black rounded-full px-4 py-2.5 flex items-center gap-3 shadow-2xl">
+          <span class="text-[10px] font-mono font-bold tracking-widest">EXPLOSION</span><span id="explodeValue" class="text-[10px] font-mono bg-black text-white px-2 py-1 rounded-full">0%</span>
+          <input id="explodeSlider" type="range" min="0" max="100" value="0" class="w-[160px] lg:w-[220px]">
+          <button id="btnImplode" class="px-2.5 py-1 bg-black/10 rounded-full text-[10px] font-mono font-bold">IMPLODE</button>
+          <button id="btnExplode" class="px-2.5 py-1 bg-yellow-400 rounded-full text-[10px] font-mono font-bold">EXPLODE</button>
+          <button id="btnAnimate" class="px-2.5 py-1 bg-black text-white rounded-full text-[10px] font-mono font-bold">▶</button>
+        </div>
+      </div>
+      <div class="border-l border-white/10 bg-[#111] p-4 flex flex-col gap-3 overflow-y-auto no-scrollbar">
+        <div class="bg-white text-black rounded-xl p-3"><div class="text-[10px] font-mono font-bold tracking-widest mb-2">VIEW</div>
+          <label class="flex justify-between py-1.5 text-[11px] cursor-pointer"><span>Trail Lines</span><input id="toggleTrails" type="checkbox" checked></label>
+          <label class="flex justify-between py-1.5 text-[11px] cursor-pointer"><span>Auto-Rotate</span><input id="toggleRotate" type="checkbox"></label>
+          <label class="flex justify-between py-1.5 text-[11px] cursor-pointer"><span>X-Ray</span><input id="toggleXray" type="checkbox"></label>
+        </div>
+        <div class="bg-[#1a1a1a] border border-white/10 rounded-xl p-3"><div class="text-[10px] font-mono font-bold tracking-widest mb-2">EXPLOSION MODE</div>
+          <div class="grid grid-cols-2 gap-1.5"><button data-preset="vertical" class="preset-btn py-2 bg-yellow-400 text-black rounded-lg text-[10px] font-mono font-bold">VERTICAL ★</button><button data-preset="radial" class="preset-btn py-2 bg-white/10 rounded-lg text-[10px] font-mono">RADIAL</button><button data-preset="linear" class="preset-btn py-2 bg-white/10 rounded-lg text-[10px] font-mono">LINEAR</button><button data-preset="sphere" class="preset-btn py-2 bg-white/10 rounded-lg text-[10px] font-mono">SPHERE</button></div>
+        </div>
+        <div class="bg-black border border-white/10 rounded-xl p-3"><div class="text-[10px] font-mono font-bold tracking-widest text-yellow-400 mb-2">PARTS LIST</div><div id="partList" class="space-y-1 max-h-[180px] overflow-y-auto no-scrollbar text-[10px] font-mono"></div></div>
+        <div class="mt-auto p-3 bg-yellow-400 text-black rounded-xl"><div class="font-bold text-[12px]">Send to client = close rate ↑</div><div class="text-[10px] mt-1 opacity-80">Copy link, client opens on phone, AR works.</div><button id="copyLink" class="mt-2 w-full py-2 bg-black text-yellow-400 rounded-full text-[10px] font-mono font-bold">COPY CLIENT LINK</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="products" class="border-t border-white/10 bg-[#080808] py-16">
+  <div class="max-w-[1600px] mx-auto px-6 lg:px-10">
+    <div class="flex flex-wrap justify-between items-end gap-6 mb-8"><div><div class="font-mono text-[11px] tracking-[0.3em] text-yellow-400 mb-2">PRODUCTS & EQUIPMENT</div><h2 class="font-syne font-800 text-[32px] lg:text-[48px] leading-[0.9]">PRODUCTS<br><span class="text-white/20">EXPLAINED IN 3D</span></h2></div><div class="max-w-[400px] text-[13px] text-white/50">Clients don't know scaffold clamp or compressor. Show live 3D exploded with specs.</div></div>
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="bg-[#111] border border-white/10 rounded-[20px] p-5"><div class="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-black text-[18px]">🏗️</div><div class="font-bold text-[16px] mt-3">Scaffold Systems</div><div class="text-[12px] text-white/50 mt-1">Clamp, frame, plank, safety. Which system, cost per m².</div><button data-go="scaffold" class="go-lab mt-4 w-full py-2.5 bg-white text-black rounded-full text-[11px] font-bold">EXPLODE SCAFFOLD →</button></div>
+      <div class="bg-[#111] border border-white/10 rounded-[20px] p-5"><div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black text-[18px]">🚜</div><div class="font-bold text-[16px] mt-3">Earthworks</div><div class="text-[12px] text-white/50 mt-1">Mini excavator to 20t, hydraulic, GPS grade.</div><button data-go="excavator" class="go-lab mt-4 w-full py-2.5 bg-yellow-400 text-black rounded-full text-[11px] font-bold">EXPLODE EXCAVATOR →</button></div>
+      <div class="bg-[#111] border border-white/10 rounded-[20px] p-5"><div class="w-10 h-10 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center text-[18px]">🔧</div><div class="font-bold text-[16px] mt-3">Power Tools</div><div class="text-[12px] text-white/50 mt-1">Drill, jackhammer, compressor exploded.</div><button data-go="drill" class="go-lab mt-4 w-full py-2.5 bg-white/10 border border-white/15 text-white rounded-full text-[11px] font-bold">EXPLODE TOOLS →</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="guides" class="border-t border-white/10 bg-[#0f0f0f] py-16">
+  <div class="max-w-[1600px] mx-auto px-6 lg:px-10 grid lg:grid-cols-2 gap-10">
+    <div><div class="font-mono text-[11px] tracking-[0.3em] text-yellow-400 mb-3">GUIDES</div><h2 class="font-syne font-800 text-[32px] lg:text-[46px] leading-[0.9]">CLIENTS HIRE<br>ARCHITECTS WHO<br><span class="text-yellow-400">TEACH</span></h2><div class="mt-6 space-y-3"><div class="flex gap-3 p-3 bg-[#111] border border-white/10 rounded-xl"><div class="w-9 h-9 bg-yellow-400 text-black rounded-xl flex items-center justify-center font-bold text-[12px]">01</div><div><div class="font-bold text-[13px]">Foundation Types Explained in 3D</div><div class="text-[10px] font-mono text-white/40">1.2k views • Includes exploded slab</div></div></div><div class="flex gap-3 p-3 bg-[#111] border border-white/10 rounded-xl"><div class="w-9 h-9 bg-white/10 border border-white/15 rounded-xl flex items-center justify-center font-bold text-[12px]">02</div><div><div class="font-bold text-[13px]">Scaffold Cost Calculator — Live 3D</div><div class="text-[10px] font-mono text-white/40">890 views • Client favorite</div></div></div><div class="flex gap-3 p-3 bg-[#111] border border-white/10 rounded-xl"><div class="w-9 h-9 bg-white/10 border border-white/15 rounded-xl flex items-center justify-center font-bold text-[12px]">03</div><div><div class="font-bold text-[13px]">How to Read Exploded Drawings</div><div class="text-[10px] font-mono text-white/40">2.4k views • PDF + Live 3D</div></div></div></div></div>
+    <div class="bg-black border border-white/10 rounded-[20px] p-5"><div class="font-mono text-[10px] tracking-widest text-white/40 mb-3">FREE GUIDE PREVIEW</div><div class="aspect-[16/10] bg-gradient-to-br from-[#1a1a0a] to-black rounded-xl border border-white/10 p-5 flex flex-col justify-end relative"><div class="absolute top-3 right-3 px-2.5 py-1 bg-yellow-400 text-black rounded-full text-[9px] font-mono font-bold">PDF + LIVE 3D</div><div class="font-syne font-800 text-[24px] leading-[0.9]">FOUNDATION<br>GUIDE 2026</div><div class="text-[11px] font-mono text-white/50 mt-2">Soil • Costs • Timeline • 3D exploded slab</div></div><button class="mt-4 w-full py-3 bg-white text-black rounded-full text-[11px] font-bold tracking-widest">DOWNLOAD FREE GUIDE →</button></div>
+  </div>
+</section>
+
+<section id="contact" class="border-t border-white/10 bg-black py-16">
+  <div class="max-w-[1600px] mx-auto px-6 lg:px-10 grid lg:grid-cols-2 gap-10">
+    <div><h2 class="font-syne font-800 text-[36px] lg:text-[56px] leading-[0.85]">LET'S BUILD<br><span class="text-yellow-400">SOMETHING</span><br><span class="text-white/20">CLEAR</span></h2><div class="mt-6 text-[14px] text-white/50 max-w-[400px]">Architect, but I work remote too. Tired of confusing plans — I make construction understandable with live 3D.</div></div>
+    <div class="bg-[#111] border border-white/10 rounded-[20px] p-6">
+      <div class="font-mono text-[10px] tracking-widest text-white/40 mb-4">GET A QUOTE — AI WILL QUALIFY FIRST</div>
+      <div class="grid gap-3"><div class="grid grid-cols-2 gap-3"><input placeholder="Your name" class="bg-black border border-white/10 rounded-xl px-4 py-3 text-[12px] focus:border-yellow-400 outline-none"><input placeholder="Email" class="bg-black border border-white/10 rounded-xl px-4 py-3 text-[12px] focus:border-yellow-400 outline-none"></div><select class="bg-black border border-white/10 rounded-xl px-4 py-3 text-[12px]"><option>Project type</option><option>Family House</option><option>Renovation</option><option>Commercial</option><option>Industrial</option></select><textarea placeholder="Tell me about your project..." rows="3" class="bg-black border border-white/10 rounded-xl px-4 py-3 text-[12px] focus:border-yellow-400 outline-none"></textarea><button class="py-3 bg-yellow-400 text-black rounded-full font-bold text-[11px] tracking-widest">SEND → AI WILL REVIEW</button></div>
+    </div>
+  </div>
+</section>
+
+<footer class="border-t border-white/10 bg-[#070707] py-8"><div class="max-w-[1600px] mx-auto px-6 lg:px-10 flex flex-wrap justify-between gap-6 text-[10px] font-mono text-white/30"><div>© 2026 THE VERT — Architecture • Live 3D Exploded Buildings & Equipment</div><div class="flex gap-4"><span>Imprint</span><span>Privacy</span><span class="text-yellow-400">AI Online ●</span></div></div></footer>
+
+<!-- AI CHAT -->
+<div id="chatWidget" class="fixed bottom-5 right-5 z-50 w-[360px] max-w-[92vw] hidden">
+  <div class="bg-[#111] border border-white/15 rounded-[20px] shadow-2xl overflow-hidden flex flex-col h-[500px]">
+    <div class="p-4 bg-black border-b border-white/10 flex justify-between items-center"><div class="flex items-center gap-3"><div class="w-8 h-8 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold text-[13px]">V</div><div><div class="font-bold text-[12px] leading-none">THE VERT AI</div><div class="text-[10px] font-mono text-green-400">● Online • Answers in 2s</div></div></div><button id="closeChat" class="w-7 h-7 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20">✕</button></div>
+    <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar bg-[#0a0a0a]">
+      <div class="flex gap-2"><div class="w-7 h-7 bg-yellow-400 text-black rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0">V</div><div class="bg-white text-black rounded-2xl rounded-tl-sm px-4 py-3 text-[11px] leading-relaxed max-w-[80%]">Hi! I'm THE VERT AI — your construction guide. I can:<br><br>• Show building samples in live 3D<br>• Explain equipment (scaffold, excavator)<br>• Give guides & cost estimates<br>• Book a call<br><br>What are you building?</div></div>
+    </div>
+    <div class="p-3 border-t border-white/10 bg-black">
+      <div class="flex flex-wrap gap-1.5 mb-3">
+        <button class="quickBtn px-2.5 py-1 bg-white/10 hover:bg-white/15 rounded-full text-[10px] font-mono" data-q="Show me building samples">🏠 Samples</button>
+        <button class="quickBtn px-2.5 py-1 bg-white/10 hover:bg-white/15 rounded-full text-[10px] font-mono" data-q="What equipment for foundation?">🚜 Equipment</button>
+        <button class="quickBtn px-2.5 py-1 bg-white/10 hover:bg-white/15 rounded-full text-[10px] font-mono" data-q="How much does a house cost?">💰 Cost</button>
+        <button class="quickBtn px-2.5 py-1 bg-yellow-400 text-black rounded-full text-[10px] font-mono font-bold" data-q="Explode the building live">▶ Explode</button>
+      </div>
+      <div class="flex gap-2"><input id="chatInput" placeholder="Ask about projects, costs, equipment..." class="flex-1 bg-[#111] border border-white/10 rounded-full px-4 py-2.5 text-[11px] focus:border-yellow-400 outline-none"><button id="sendChat" class="w-9 h-9 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold hover:bg-yellow-300">↑</button></div>
+    </div>
+  </div>
+</div>
+<button id="chatFab" class="fixed bottom-5 right-5 z-40 w-14 h-14 bg-yellow-400 text-black rounded-full shadow-2xl flex items-center justify-center text-[20px] hover:bg-yellow-300 transition"><span>💬</span><span class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-black rounded-full"></span></button>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+
+let scene,camera,renderer,controls,group,heroScene,heroCamera,heroRenderer,heroGroup,miniScene,miniCamera,miniRenderer,miniGroup;
+let parts=[],explodeFactor=0,preset='vertical',clock=new THREE.Clock(),heroClock=new THREE.Clock(),miniExplode=0.35,autoDir=1;
+let loader, dracoLoader;
+
+const canvas=document.getElementById('canvas');
+const heroCanvas=document.getElementById('heroCanvas');
+const miniCanvas=document.getElementById('miniCanvas');
+const slider=document.getElementById('explodeSlider');
+const valueLabel=document.getElementById('explodeValue');
+
+function initLoaders(){
+  loader=new GLTFLoader();
+  dracoLoader=new DRACOLoader();
+  dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+  loader.setDRACOLoader(dracoLoader);
+}
+
+function initMain(){
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0a0a); scene.fog=new THREE.Fog(0x0a0a0a,12,35);
+  camera=new THREE.PerspectiveCamera(45, canvas.clientWidth/canvas.clientHeight, 0.1, 100); camera.position.set(3.2,2.2,4);
+  renderer=new THREE.WebGLRenderer({canvas, antialias:true, preserveDrawingBuffer:true}); renderer.setPixelRatio(window.devicePixelRatio); renderer.setSize(canvas.clientWidth, canvas.clientHeight); renderer.shadowMap.enabled=true; renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  controls=new OrbitControls(camera, renderer.domElement); controls.enableDamping=true; controls.dampingFactor=0.08;
+  const amb=new THREE.AmbientLight(0xffffff,0.65); scene.add(amb);
+  const d1=new THREE.DirectionalLight(0xffffff,2.2); d1.position.set(5,10,5); d1.castShadow=true; d1.shadow.mapSize.set(2048,2048); scene.add(d1);
+  const d2=new THREE.DirectionalLight(0xffe7a0,1); d2.position.set(-4,3,-4); scene.add(d2);
+  const gGeo=new THREE.PlaneGeometry(50,50); const gMat=new THREE.ShadowMaterial({opacity:0.18}); const ground=new THREE.Mesh(gGeo,gMat); ground.rotation.x=-Math.PI/2; ground.position.y=-1.3; ground.receiveShadow=true; scene.add(ground);
+  const grid=new THREE.GridHelper(20,20,0x2a2a2a,0x1a1a1a); grid.position.y=-1.29; scene.add(grid);
+  group=new THREE.Group(); scene.add(group);
+  window.addEventListener('resize',()=>{ if(!canvas.clientWidth) return; camera.aspect=canvas.clientWidth/canvas.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(canvas.clientWidth, canvas.clientHeight); });
+}
+
+function initHero(){
+  heroScene=new THREE.Scene(); heroScene.background=new THREE.Color(0x070707);
+  heroCamera=new THREE.PerspectiveCamera(50, heroCanvas.clientWidth/heroCanvas.clientHeight, 0.1, 100); heroCamera.position.set(0,1.2,4);
+  heroRenderer=new THREE.WebGLRenderer({canvas:heroCanvas, antialias:true, alpha:true}); heroRenderer.setPixelRatio(window.devicePixelRatio); heroRenderer.setSize(heroCanvas.clientWidth, heroCanvas.clientHeight);
+  heroGroup=new THREE.Group(); heroScene.add(heroGroup);
+  const amb=new THREE.AmbientLight(0xffffff,0.7); heroScene.add(amb); const d=new THREE.DirectionalLight(0xffffff,1.8); d.position.set(3,5,2); heroScene.add(d);
+  const mats=[new THREE.MeshStandardMaterial({color:0x3a3a3a}), new THREE.MeshStandardMaterial({color:0x555555}), new THREE.MeshStandardMaterial({color:0x8a6d3b}), new THREE.MeshStandardMaterial({color:0xfacc15}), new THREE.MeshStandardMaterial({color:0x222222})];
+  const layers=[{h:0.15,w:2.2,d:1.6,y:-0.8,mat:0},{h:0.4,w:2,d:1.4,y:-0.4,mat:1},{h:0.6,w:1.9,d:1.3,y:0.1,mat:2},{h:0.15,w:2.1,d:1.5,y:0.55,mat:3},{h:0.5,w:0.2,d:1.2,y:0.1,mat:4}];
+  layers.forEach(l=>{ const geo=new THREE.BoxGeometry(l.w,l.h,l.d); const m=new THREE.Mesh(geo,mats[l.mat]); m.position.set(0,l.y,0); m.userData.orig=m.position.clone(); m.userData.dir=new THREE.Vector3(0,1,0); heroGroup.add(m); });
+  window.addEventListener('resize',()=>{ if(!heroCanvas.clientWidth) return; heroCamera.aspect=heroCanvas.clientWidth/heroCanvas.clientHeight; heroCamera.updateProjectionMatrix(); heroRenderer.setSize(heroCanvas.clientWidth, heroCanvas.clientHeight); });
+}
+
+function initMini(){
+  miniScene=new THREE.Scene(); miniScene.background=new THREE.Color(0x000000);
+  miniCamera=new THREE.PerspectiveCamera(40, miniCanvas.clientWidth/miniCanvas.clientHeight, 0.1, 100); miniCamera.position.set(2,1.4,2.2);
+  miniRenderer=new THREE.WebGLRenderer({canvas:miniCanvas, antialias:true}); miniRenderer.setPixelRatio(window.devicePixelRatio); miniRenderer.setSize(miniCanvas.clientWidth, miniCanvas.clientHeight);
+  miniGroup=new THREE.Group(); miniScene.add(miniGroup);
+  const amb=new THREE.AmbientLight(0xffffff,0.8); miniScene.add(amb); const d=new THREE.DirectionalLight(0xffffff,1.6); d.position.set(2,4,2); miniScene.add(d);
+  const matY=new THREE.MeshStandardMaterial({color:0xfacc15}); const matG=new THREE.MeshStandardMaterial({color:0x333333});
+  for(let i=0;i<6;i++){ const geo=new THREE.BoxGeometry(0.4,0.12,0.35); const m=new THREE.Mesh(geo,i===2?matY:matG); m.position.set(0,(i-2.5)*0.18,0); m.userData.orig=m.position.clone(); m.userData.dir=new THREE.Vector3(0,1,0); miniGroup.add(m); }
+  window.addEventListener('resize',()=>{ if(!miniCanvas.clientWidth) return; miniCamera.aspect=miniCanvas.clientWidth/miniCanvas.clientHeight; miniCamera.updateProjectionMatrix(); miniRenderer.setSize(miniCanvas.clientWidth, miniCanvas.clientHeight); });
+}
+
+function clearGroup(){ parts.forEach(p=>{ if(p.trailLine) scene.remove(p.trailLine); }); parts=[]; while(group.children.length) group.remove(group.children[0]); }
+
+function createModel(type){
+  clearGroup(); let meshes=[];
+  const matConcrete=new THREE.MeshStandardMaterial({color:0x666666}), matWood=new THREE.MeshStandardMaterial({color:0x8B5A2B}), matInsul=new THREE.MeshStandardMaterial({color:0xF5E6A0}), matYellow=new THREE.MeshStandardMaterial({color:0xfacc15}), matBlack=new THREE.MeshStandardMaterial({color:0x1a1a1a}), matSteel=new THREE.MeshStandardMaterial({color:0x888888,metalness:0.8,roughness:0.2}), matGlass=new THREE.MeshStandardMaterial({color:0x88ccff,transparent:true,opacity:0.25});
+  
+  if(type==='house'){
+    const layers=[
+      {geo:new THREE.BoxGeometry(2.4,0.25,1.8), pos:[0,-1.2,0], mat:matConcrete, name:'01 Foundation Slab — 25cm Concrete'},
+      {geo:new THREE.BoxGeometry(2.2,0.35,1.6), pos:[0,-0.9,0], mat:new THREE.MeshStandardMaterial({color:0x444444}), name:'02 Perimeter Insulation — 12cm XPS'},
+      {geo:new THREE.BoxGeometry(2.0,0.6,1.4), pos:[0,-0.5,0], mat:matConcrete, name:'03 Ground Floor Walls — 24cm'},
+      {geo:new THREE.BoxGeometry(1.9,0.15,1.3), pos:[0,-0.15,0], mat:matInsul, name:'04 Insulation — 16cm Mineral Wool'},
+      {geo:new THREE.BoxGeometry(1.8,0.6,1.2), pos:[0,0.25,0], mat:matWood, name:'05 Timber Frame Upper'},
+      {geo:new THREE.BoxGeometry(0.15,0.6,1.2), pos:[0.8,0.25,0], mat:matBlack, name:'06 Window — Triple Glazed'},
+      {geo:new THREE.BoxGeometry(1.7,0.12,1.1), pos:[0,0.6,0], mat:matWood, name:'07 Ceiling Slab'},
+      {geo:new THREE.BoxGeometry(1.6,0.2,1.0), pos:[0,0.85,0], mat:matInsul, name:'08 Roof Insulation — 24cm'},
+      {geo:new THREE.BoxGeometry(2.0,0.08,1.4), pos:[0,1.05,0], mat:matYellow, name:'09 Roof — Zinc'},
+      {geo:new THREE.CylinderGeometry(0.04,0.04,0.5,8), pos:[0.9,0.9,0.3], mat:matSteel, name:'10 Gutter'},
+      {geo:new THREE.BoxGeometry(0.4,0.05,0.8), pos:[-0.7,-0.5,0.7], mat:matBlack, name:'11 Scaffold Plank'},
+      {geo:new THREE.BoxGeometry(0.05,1.2,0.05), pos:[-0.9,-0.2,0.7], mat:matSteel, name:'12 Scaffold Frame'},
+    ];
+    layers.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); m.castShadow=true; m.receiveShadow=true; m.userData.name=c.name; meshes.push(m); });
+  } else if(type==='commercial'){
+    const cfgs=[
+      {geo:new THREE.BoxGeometry(2.2,0.2,1.4), pos:[0,-1,0], mat:matConcrete, name:'Foundation'},
+      {geo:new THREE.BoxGeometry(0.15,1.2,0.15), pos:[-0.9,0,0.6], mat:matSteel, name:'Steel Column HEB 300'},
+      {geo:new THREE.BoxGeometry(0.15,1.2,0.15), pos:[0.9,0,0.6], mat:matSteel, name:'Steel Column'},
+      {geo:new THREE.BoxGeometry(0.15,1.2,0.15), pos:[-0.9,0,-0.6], mat:matSteel, name:'Steel Column'},
+      {geo:new THREE.BoxGeometry(0.15,1.2,0.15), pos:[0.9,0,-0.6], mat:matSteel, name:'Steel Column'},
+      {geo:new THREE.BoxGeometry(2.0,0.15,1.2), pos:[0,0.6,0], mat:matSteel, name:'Steel Beam IPE 400'},
+      {geo:new THREE.BoxGeometry(1.8,0.05,1.0), pos:[0,0,0], mat:matConcrete, name:'Concrete Slab'},
+      {geo:new THREE.BoxGeometry(1.9,0.8,0.05), pos:[0,0.2,0.7], mat:matGlass, name:'Facade Glazing'},
+    ];
+    cfgs.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); m.castShadow=true; m.userData.name=c.name; meshes.push(m); });
+  } else if(type==='scaffold'){
+    const matO=new THREE.MeshStandardMaterial({color:0xff6b00}); const matS=new THREE.MeshStandardMaterial({color:0x999999,metalness:0.9});
+    const cfgs=[
+      {geo:new THREE.BoxGeometry(0.05,1.5,0.05), pos:[-0.6,0,0.4], mat:matS, name:'01 Vertical Frame — 2m'},
+      {geo:new THREE.BoxGeometry(0.05,1.5,0.05), pos:[0.6,0,0.4], mat:matS, name:'02 Vertical Frame'},
+      {geo:new THREE.BoxGeometry(1.2,0.05,0.05), pos:[0,0.6,0.4], mat:matS, name:'03 Horizontal Ledger'},
+      {geo:new THREE.BoxGeometry(1.2,0.05,0.4), pos:[0,0,0.4], mat:new THREE.MeshStandardMaterial({color:0x8B4513}), name:'04 Wooden Plank — 3m'},
+      {geo:new THREE.TorusGeometry(0.18,0.05,8,16,Math.PI), pos:[0,0.6,0.4], mat:matO, name:'05 Scaffold Clamp — Forged'},
+      {geo:new THREE.CylinderGeometry(0.04,0.04,0.3,8), pos:[0.6,0.6,0.4], mat:matS, name:'06 Bolt M12'},
+      {geo:new THREE.BoxGeometry(1.0,0.02,0.3), pos:[0,-0.6,0.4], mat:matS, name:'07 Base Plate'},
+      {geo:new THREE.CylinderGeometry(0.02,0.02,0.8,6), pos:[-0.6,-0.2,0.2], mat:matS, name:'08 Diagonal Brace'},
+      {geo:new THREE.BoxGeometry(0.02,1.0,0.02), pos:[0,0,0.6], mat:matS, name:'09 Guardrail'},
+      {geo:new THREE.BoxGeometry(0.3,0.4,0.02), pos:[0,0.2,0.55], mat:matO, name:'10 Toe Board'},
+    ];
+    cfgs.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); m.castShadow=true; m.userData.name=c.name; meshes.push(m); });
+  } else if(type==='drill'){
+    const matY=new THREE.MeshStandardMaterial({color:0xfacc15}), matB=new THREE.MeshStandardMaterial({color:0x1a1a1a}), matM=new THREE.MeshStandardMaterial({color:0xaaaaaa,metalness:0.8,roughness:0.2});
+    const cfgs=[
+      {geo:new THREE.CylinderGeometry(0.12,0.12,0.22,16), pos:[0,0,0.7], mat:matM, name:'Chuck — Keyless'},
+      {geo:new THREE.CylinderGeometry(0.15,0.15,0.2,16), pos:[0,0,0.48], mat:matB, name:'Gearbox'},
+      {geo:new THREE.BoxGeometry(0.32,0.4,0.5), pos:[0,0.08,0.08], mat:matY, name:'Motor Housing'},
+      {geo:new THREE.CylinderGeometry(0.1,0.1,0.32,16), pos:[0,0,0.08], mat:matM, rot:[0,0,Math.PI/2], name:'Motor'},
+      {geo:new THREE.BoxGeometry(0.24,0.64,0.28), pos:[0,-0.4,0], mat:matY, name:'Handle'},
+      {geo:new THREE.BoxGeometry(0.2,0.28,0.12), pos:[0,-0.24,0.12], mat:matB, name:'Trigger'},
+      {geo:new THREE.BoxGeometry(0.28,0.16,0.4), pos:[0,-0.76,0.04], mat:matB, name:'Battery 18V'},
+      {geo:new THREE.CylinderGeometry(0.04,0.04,0.32,8), pos:[0.2,-0.48,0], mat:matB, name:'Aux Handle'},
+    ];
+    cfgs.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); if(c.rot) m.rotation.set(...c.rot); m.castShadow=true; m.userData.name=c.name; meshes.push(m); });
+  } else if(type==='excavator'){
+    const matY=new THREE.MeshStandardMaterial({color:0xfacc15}), matB=new THREE.MeshStandardMaterial({color:0x222222}), matM=new THREE.MeshStandardMaterial({color:0x888888,metalness:0.8});
+    const cfgs=[
+      {geo:new THREE.BoxGeometry(0.5,0.16,1.0), pos:[0,-0.7,0], mat:matB, name:'Tracks — Rubber'},
+      {geo:new THREE.CylinderGeometry(0.32,0.32,0.24,16), pos:[0,-0.44,0], mat:matB, name:'Slew Ring'},
+      {geo:new THREE.BoxGeometry(0.64,0.4,0.72), pos:[0,0,0], mat:matY, name:'Upper Structure'},
+      {geo:new THREE.BoxGeometry(0.4,0.48,0.4), pos:[0,0.24,0.16], mat:new THREE.MeshStandardMaterial({color:0x111111}), name:'Cabin'},
+      {geo:new THREE.BoxGeometry(0.12,0.64,0.12), pos:[0,0.16,0.64], mat:matY, name:'Boom Base'},
+      {geo:new THREE.BoxGeometry(0.1,0.1,0.96), pos:[0,0.48,1.2], mat:matY, rot:[0.5,0,0], name:'Boom'},
+      {geo:new THREE.BoxGeometry(0.08,0.08,0.72), pos:[0,0.72,1.76], mat:matY, rot:[-0.3,0,0], name:'Stick'},
+      {geo:new THREE.BoxGeometry(0.32,0.24,0.32), pos:[0,0.56,2.16], mat:matB, name:'Bucket 0.3m³'},
+      {geo:new THREE.CylinderGeometry(0.04,0.04,0.48,8), pos:[0.16,0.4,0.88], mat:matM, name:'Hydraulic Cylinder'},
+      {geo:new THREE.CylinderGeometry(0.032,0.032,0.4,8), pos:[0.12,0.64,1.52], mat:matM, name:'Hydraulic Cylinder 2'},
+    ];
+    cfgs.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); if(c.rot) m.rotation.set(...c.rot); m.castShadow=true; m.userData.name=c.name; meshes.push(m); });
+  } else if(type==='engine'){
+    const matY=new THREE.MeshStandardMaterial({color:0xfacc15}), matI=new THREE.MeshStandardMaterial({color:0x444444}), matA=new THREE.MeshStandardMaterial({color:0xcccccc,metalness:0.7});
+    for(let i=0;i<18;i++){ const geo=i%2===0?new THREE.BoxGeometry(0.18+Math.random()*0.12,0.12,0.16):new THREE.CylinderGeometry(0.06,0.06,0.16,10); const mat=i<2?matY:(i%3===0?matI:matA); const m=new THREE.Mesh(geo,mat); const ang=(i/18)*Math.PI*2; const r=0.24+i*0.032; m.position.set(Math.cos(ang)*r,(i-9)*0.1,Math.sin(ang)*r); m.rotation.set(Math.random()*0.4,Math.random()*0.4,0); m.castShadow=true; m.userData.name=`Engine Part ${i+1}`; meshes.push(m); }
+  }
+  meshes.forEach(m=> group.add(m)); setupParts(); updateStats(); updatePartList();
+}
+
+function setupParts(){
+  const box=new THREE.Box3().setFromObject(group); const center=new THREE.Vector3(); box.getCenter(center);
+  parts=[]; group.children.forEach(ch=>{ if(!ch.isMesh) return; const wc=new THREE.Vector3(); ch.getWorldPosition(wc); let dir=new THREE.Vector3().subVectors(wc,center); if(dir.length()<0.001) dir.set((Math.random()-0.5),(Math.random()-0.5),(Math.random()-0.5)); dir.normalize(); const orig=ch.position.clone(); const trailGeo=new THREE.BufferGeometry().setFromPoints([orig.clone(),orig.clone()]); const trailMat=new THREE.LineDashedMaterial({color:0xffffff,dashSize:0.05,gapSize:0.05,opacity:0.4,transparent:true}); const trail=new THREE.Line(trailGeo,trailMat); trail.computeLineDistances(); trail.visible=document.getElementById('toggleTrails').checked; scene.add(trail); parts.push({mesh:ch,originalPos:orig,direction:dir,trailLine:trail,randomOffset:new THREE.Vector3((Math.random()-0.5)*0.4,(Math.random()-0.5)*0.4,(Math.random()-0.5)*0.4)}); });
+}
+
+function applyExplosion(f){
+  explodeFactor=f; const maxD=2.6;
+  parts.forEach(p=>{
+    if(preset==='vertical'){ const idx=parts.indexOf(p); const yOff=f*maxD*(idx*0.22+0.3); p.mesh.position.copy(p.originalPos).add(new THREE.Vector3((Math.random()-0.5)*0.15*f, yOff, (Math.random()-0.5)*0.15*f)); }
+    else if(preset==='linear'){ const idx=parts.indexOf(p); p.mesh.position.copy(p.originalPos).add(new THREE.Vector3(f*maxD*idx*0.28,0,0)); }
+    else if(preset==='radial'){ p.mesh.position.copy(p.originalPos).add(p.direction.clone().multiplyScalar(f*maxD)).add(p.randomOffset.clone().multiplyScalar(f)); }
+    else { p.mesh.position.copy(p.originalPos).add(p.direction.clone().multiplyScalar(f*maxD*1.2)); }
+    if(p.trailLine){ const pts=[p.originalPos.clone(), p.mesh.position.clone()]; p.trailLine.geometry.setFromPoints(pts); p.trailLine.computeLineDistances(); p.trailLine.visible=document.getElementById('toggleTrails').checked && f>0.05; }
+  });
+  valueLabel.textContent=Math.round(f*100)+'%'; const miniL=document.getElementById('miniLabel'); if(miniL) miniL.textContent=Math.round(f*100)+'% EXPLODED';
+}
+
+function updateStats(){ document.getElementById('statParts').textContent=parts.length; let tris=0; parts.forEach(p=>{ if(p.mesh.geometry){ const g=p.mesh.geometry; if(g.index) tris+=g.index.count/3; else tris+=g.attributes.position.count/3; } }); document.getElementById('statTris').textContent=(tris/1000).toFixed(1)+'k'; }
+function updatePartList(){ const list=document.getElementById('partList'); if(!list) return; list.innerHTML=''; parts.forEach((p,i)=>{ const div=document.createElement('div'); div.className='flex gap-2 p-2 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer'; div.innerHTML=`<span class="text-yellow-400">${String(i+1).padStart(2,'0')}</span><span class="flex-1 truncate">${p.mesh.userData.name||'Part '+(i+1)}</span>`; div.onclick=()=>{ const origEm=p.mesh.material.emissive? p.mesh.material.emissive.clone(): new THREE.Color(0); if(p.mesh.material.emissive){ p.mesh.material.emissive.set(0x444400); setTimeout(()=>{ p.mesh.material.emissive.copy(origEm); },600); } }; list.appendChild(div); }); }
+
+function animate(){ requestAnimationFrame(animate); const d=clock.getDelta(), hd=heroClock.getDelta(); if(controls) controls.update(); const fpsEl=document.getElementById('statFps'); if(fpsEl) fpsEl.textContent=Math.round(1/d);
+  miniExplode+=hd*0.22*autoDir; if(miniExplode>0.85){miniExplode=0.85; autoDir=-1;} if(miniExplode<0.15){miniExplode=0.15; autoDir=1;}
+  if(heroGroup){ heroGroup.children.forEach(m=>{ if(!m.userData.orig) return; const off=new THREE.Vector3(0,miniExplode*0.9,0); m.position.copy(m.userData.orig).add(off); }); heroGroup.rotation.y+=hd*0.15; }
+  if(miniGroup){ miniGroup.children.forEach(m=>{ if(!m.userData.orig) return; const off=new THREE.Vector3(0,miniExplode*0.7,0); m.position.copy(m.userData.orig).add(off); }); miniGroup.rotation.y+=hd*0.3; }
+  if(renderer && scene && camera) renderer.render(scene,camera);
+  if(heroRenderer && heroScene && heroCamera) heroRenderer.render(heroScene,heroCamera);
+  if(miniRenderer && miniScene && miniCamera) miniRenderer.render(miniScene,miniCamera);
+}
+
+// UI EVENTS
+function setupUI(){
+  document.querySelectorAll('.model-btn').forEach(b=>{ b.addEventListener('click',()=>{ document.querySelectorAll('.model-btn').forEach(x=> x.className='model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10'); b.className='model-btn active text-left p-3 rounded-xl bg-yellow-400 text-black'; createModel(b.dataset.model); const sl=document.getElementById('explodeSlider'); if(sl){ sl.value=0; } applyExplosion(0); }); });
+  const sl=document.getElementById('explodeSlider'); if(sl) sl.addEventListener('input',e=> applyExplosion(e.target.value/100));
+  document.getElementById('btnExplode')?.addEventListener('click',()=>{ let s=explodeFactor*100,t=100,st=performance.now(),d=1100; function a(ti){ let p=Math.min((ti-st)/d,1),e=1-Math.pow(1-p,3),v=s+(t-s)*e; const sliderEl=document.getElementById('explodeSlider'); if(sliderEl) sliderEl.value=v; applyExplosion(v/100); if(p<1) requestAnimationFrame(a);} requestAnimationFrame(a); });
+  document.getElementById('btnImplode')?.addEventListener('click',()=>{ let s=explodeFactor*100,t=0,st=performance.now(),d=700; function a(ti){ let p=Math.min((ti-st)/d,1),e=1-Math.pow(1-p,3),v=s+(t-s)*e; const sliderEl=document.getElementById('explodeSlider'); if(sliderEl) sliderEl.value=v; applyExplosion(v/100); if(p<1) requestAnimationFrame(a);} requestAnimationFrame(a); });
+  let animInt=null,isAnim=false; document.getElementById('btnAnimate')?.addEventListener('click',function(){ isAnim=!isAnim; this.textContent=isAnim?'⏸':'▶'; if(isAnim){ let dir=1; animInt=setInterval(()=>{ const sliderEl=document.getElementById('explodeSlider'); if(!sliderEl) return; let v=parseFloat(sliderEl.value)+dir*0.9; if(v>=100){v=100; dir=-1;} if(v<=0){v=0; dir=1;} sliderEl.value=v; applyExplosion(v/100); },16);} else clearInterval(animInt); });
+  document.querySelectorAll('.preset-btn').forEach(b=>{ b.addEventListener('click',()=>{ document.querySelectorAll('.preset-btn').forEach(x=> x.className='preset-btn py-2 bg-white/10 rounded-lg text-[10px] font-mono'); b.className='preset-btn py-2 bg-yellow-400 text-black rounded-lg text-[10px] font-mono font-bold'; preset=b.dataset.preset; applyExplosion(explodeFactor); }); });
+  document.getElementById('toggleTrails')?.addEventListener('change',e=>{ parts.forEach(p=>{ if(p.trailLine) p.trailLine.visible=e.target.checked && explodeFactor>0.05; }); });
+  document.getElementById('toggleXray')?.addEventListener('change',e=>{ parts.forEach(p=>{ p.mesh.material.transparent=e.target.checked; p.mesh.material.opacity=e.target.checked?0.35:1; }); });
+  document.querySelectorAll('.go-lab').forEach(b=>{ b.addEventListener('click',()=>{ const m=b.dataset.go; document.getElementById('lab')?.scrollIntoView({behavior:'smooth'}); setTimeout(()=>{ createModel(m); const sliderEl=document.getElementById('explodeSlider'); if(sliderEl) sliderEl.value=0; applyExplosion(0); setTimeout(()=>{ document.getElementById('btnExplode')?.click(); },400); },600); }); });
+  document.getElementById('exportPng')?.addEventListener('click',()=>{ const url=renderer.domElement.toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download=`the-vert-${Date.now()}.png`; a.click(); });
+  document.getElementById('exportGlb')?.addEventListener('click',()=>{ const exp=new GLTFExporter(); exp.parse(group,gltf=>{ const blob=new Blob([gltf],{type:'model/gltf-binary'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`the-vert-${Date.now()}.glb`; a.click(); addBotMessage(`Exported GLB ${(blob.size/1024/1024).toFixed(2)} MB — Ready to send to client!`); },()=>{}, {binary:true}); });
+  document.getElementById('copyLink')?.addEventListener('click',()=>{ navigator.clipboard.writeText(window.location.href).then(()=> alert('Client link copied! Send to client.')).catch(()=> alert('Link: '+window.location.href)); });
+  const fileInput=document.getElementById('fileInput'); if(fileInput) fileInput.addEventListener('change',e=>{ const f=e.target.files[0]; if(f) handleFile(f); });
+  document.getElementById('openChatBtn')?.addEventListener('click',()=>{ document.getElementById('chatWidget').classList.remove('hidden'); document.getElementById('chatFab').classList.add('hidden'); });
+  document.getElementById('closeChat')?.addEventListener('click',()=>{ document.getElementById('chatWidget').classList.add('hidden'); document.getElementById('chatFab').classList.remove('hidden'); });
+  document.getElementById('chatFab')?.addEventListener('click',()=>{ document.getElementById('chatWidget').classList.remove('hidden'); document.getElementById('chatFab').classList.add('hidden'); });
+  document.getElementById('sendChat')?.addEventListener('click',()=> sendMessage());
+  document.getElementById('chatInput')?.addEventListener('keypress',e=>{ if(e.key==='Enter') sendMessage(); });
+  document.querySelectorAll('.quickBtn').forEach(b=>{ b.addEventListener('click',()=>{ const q=b.dataset.q; document.getElementById('chatInput').value=q; sendMessage(); }); });
+}
+
+function handleFile(f){
+  if(!loader){ initLoaders(); }
+  const url=URL.createObjectURL(f);
+  loader.loadAsync(url).then(gltf=>{
+    clearGroup();
+    gltf.scene.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; c.material=c.material.clone(); }});
+    const box=new THREE.Box3().setFromObject(gltf.scene); const sz=new THREE.Vector3(); box.getSize(sz); const max=Math.max(sz.x,sz.y,sz.z); const sc=2.2/max; gltf.scene.scale.setScalar(sc); const ctr=new THREE.Vector3(); box.getCenter(ctr); gltf.scene.position.sub(ctr.multiplyScalar(sc));
+    const temp=[]; gltf.scene.traverse(o=>{ if(o.isMesh) temp.push(o.clone()); });
+    if(temp.length<=1) group.add(gltf.scene); else temp.forEach(m=> group.add(m));
+    setupParts(); updateStats(); updatePartList(); const sl=document.getElementById('explodeSlider'); if(sl) sl.value=0; applyExplosion(0);
+    addBotMessage(`Loaded ${f.name} — ${parts.length} parts. Drag slider to explode!`);
+  }).catch(err=>{ console.error(err); alert('Failed to load: '+err.message); });
+}
+
+// AI CHAT
+const chatMessages=document.getElementById('chatMessages');
+const chatInput=document.getElementById('chatInput');
+
+function addUserMessage(text){ const div=document.createElement('div'); div.className='flex gap-2 justify-end'; div.innerHTML=`<div class="bg-yellow-400 text-black rounded-2xl rounded-tr-sm px-4 py-2.5 text-[11px] max-w-[80%]">${text}</div>`; chatMessages.appendChild(div); chatMessages.scrollTop=chatMessages.scrollHeight; }
+function addBotMessage(text){ const div=document.createElement('div'); div.className='flex gap-2'; div.innerHTML=`<div class="w-7 h-7 bg-yellow-400 text-black rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0">V</div><div class="bg-white text-black rounded-2xl rounded-tl-sm px-4 py-3 text-[11px] leading-relaxed max-w-[80%]">${text}</div>`; chatMessages.appendChild(div); chatMessages.scrollTop=chatMessages.scrollHeight; }
+
+function getAIResponse(msg){
+  const m=msg.toLowerCase();
+  if(m.includes('building')||m.includes('sample')||m.includes('project')||m.includes('house')||m.includes('work')){
+    return `Here are my top building samples — all live 3D exploded:<br><br>🏠 <b>Family House</b> — 120m², 12 layers exploded. Client approved in 1 meeting.<br>🏢 <b>Studio Loft</b> — Steel + glass, scaffold as assembly guide.<br>🏗️ <b>Warehouse</b> — 1200m² with equipment.<br><br>Want me to explode one? Say "explode house" or click LAB.`;
+  }
+  if(m.includes('equipment')||m.includes('scaffold')||m.includes('excavator')||m.includes('tool')||m.includes('product')){
+    return `I explain all site equipment in live 3D:<br><br>🏗️ <b>Scaffold</b> — Clamp, frame, plank, safety.<br>🚜 <b>Excavator</b> — 0.8t to 20t, hydraulic, GPS grade.<br>🔧 <b>Power Tools</b> — Drill, jackhammer, compressor exploded.<br><br>Say "explode scaffold" and I'll show it live.`;
+  }
+  if(m.includes('cost')||m.includes('price')||m.includes('budget')||m.includes('how much')){
+    return `Quick cost guide:<br><br>• Family 120m²: $280k-$420k<br>• Scaffold 100m²: $800-$1500 / month<br>• Foundation slab: $80-$120 / m²<br>• My 3D visualization: from $450 per project<br><br>Tell me: project type, size, timeline? I'll book a call.`;
+  }
+  if(m.includes('guide')||m.includes('foundation')||m.includes('learn')){
+    return `My client-winning guides:<br><br>01 <b>Foundation Types</b> — slab vs strip vs pile, exploded 3D<br>02 <b>Scaffold Cost Calculator</b> — interactive 3D<br>03 <b>How to Read Exploded Drawings</b><br><br>These capture leads while you sleep. Want free Foundation Guide?`;
+  }
+  if(m.includes('explode')||m.includes('3d')||m.includes('live')||m.includes('lab')){
+    return `Exploding live now in LAB! 👇<br><br>I'm switching to house layers — 12 layers from foundation to roof. Drag slider to 80% to see every bolt. This is what you send to clients.`;
+  }
+  if(m.includes('architect')||m.includes('who are you')||m.includes('the vert')){
+    return `THE VERT is my architecture studio. I make construction crystal clear with live 3D exploded views.<br><br>Problem: Clients can't read 2D plans.<br>Solution: I show every building as live 3D — every layer, product, equipment. Client explodes it on phone and approves faster.<br><br>Plus guides + AI assistant 24/7.`;
+  }
+  if(m.includes('contact')||m.includes('hire')||m.includes('quote')||m.includes('book')){
+    return `Let's get you a quote! Quick:<br><br>1️⃣ Project type? (house, renovation, commercial)<br>2️⃣ Size in m²?<br>3️⃣ Timeline?<br>4️⃣ Budget?<br><br>Reply with that and I'll structure it and book a call.`;
+  }
+  return `Got it! I can help with:<br><br>• 🏠 <b>Building samples</b> — "show me houses"<br>• 🚜 <b>Equipment</b> — "scaffold guide"<br>• 💰 <b>Costs</b> — "how much house"<br>• 📚 <b>Guides</b> — "foundation guide"<br>• ▶️ <b>Live 3D</b> — "explode building"<br><br>What are you building?`;
+}
+
+function sendMessage(){
+  const text=chatInput.value.trim(); if(!text) return;
+  addUserMessage(text); chatInput.value='';
+  setTimeout(()=>{
+    const resp=getAIResponse(text); addBotMessage(resp);
+    const low=text.toLowerCase();
+    if(low.includes('explode house')||(low.includes('house')&&low.includes('explode'))){ createModel('house'); const sl=document.getElementById('explodeSlider'); if(sl) sl.value=0; applyExplosion(0); setTimeout(()=>{ document.getElementById('btnExplode')?.click(); document.getElementById('lab')?.scrollIntoView({behavior:'smooth'}); },300); }
+    else if(low.includes('scaffold')){ createModel('scaffold'); const sl=document.getElementById('explodeSlider'); if(sl) sl.value=0; applyExplosion(0); setTimeout(()=>{ document.getElementById('btnExplode')?.click(); document.getElementById('lab')?.scrollIntoView({behavior:'smooth'}); },300); }
+    else if(low.includes('excavator')){ createModel('excavator'); const sl=document.getElementById('explodeSlider'); if(sl) sl.value=0; applyExplosion(0); setTimeout(()=>{ document.getElementById('btnExplode')?.click(); document.getElementById('lab')?.scrollIntoView({behavior:'smooth'}); },300); }
+    else if(low.includes('commercial')||low.includes('studio')){ createModel('commercial'); const sl=document.getElementById('explodeSlider'); if(sl) sl.value=0; applyExplosion(0); document.getElementById('lab')?.scrollIntoView({behavior:'smooth'}); }
+    else if(low.includes('building')||low.includes('sample')){ document.getElementById('work')?.scrollIntoView({behavior:'smooth'}); }
+  }, 500);
+}
+
+// INIT
+initLoaders();
+initMain();
+initHero();
+initMini();
+setupUI();
+createModel('house');
+animate();
+
+console.log('THE VERT — All features loaded: Lab, AI Assistant, Upload, Export');
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3d0f10b2bbe8a44',t:'MTc4OTc0MDcwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
