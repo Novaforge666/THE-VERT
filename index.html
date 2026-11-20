@@ -3,498 +3,1828 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>THE VERT — Architect | Live 3D Buildings, Guides & Equipment</title>
-<meta name="description" content=" architect making construction crystal clear. Live 3D exploded buildings, equipment guides, product samples. AI assistant answers 24/7.">
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
-<script>tailwind.config={theme:{extend:{fontFamily:{syne:['Syne','sans-serif'],sans:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
-<style>html{scroll-behavior:smooth}body{overscroll-behavior:none}input[type=range]{accent-color:#facc15}.glass{backdrop-filter:blur(16px)} .no-scrollbar::-webkit-scrollbar{display:none}</style>
-<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
-</head>
-<body class="bg-[#070707] text-white font-sans antialiased selection:bg-yellow-400 selection:text-black">
+<title>DB Traders — Volatility Dashboard</title>
+<!--
+  ─────────────────────────────────────────────────────────────────────────
+  DB TRADERS — Volatility Dashboard (styled after dbtraders.com)
+  Self-contained third-party Deriv trading site: HTML + CSS + vanilla JS.
+  No build step, no frameworks.
 
-<!-- NAV -->
-<nav class="fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur-2xl">
- <div class="max-w-[1600px] mx-auto px-6 lg:px-10 h-[68px] flex items-center justify-between">
-<div class="flex items-center gap-8">
- <div class="flex items-center gap-3"><div class="w-9 h-9 bg-yellow-400 text-black font-syne font-800 text-[18px] flex items-center justify-center rounded-[9px]">V</div><div><div class="font-syne font-800 text-[18px] leading-none tracking-tight">THE <span class="text-yellow-400">VERT</span></div><div class="text-[9px] font-mono tracking-[0.2em] text-white/40"> • </div></div></div>
- <div class="hidden lg:flex items-center gap-7 text-[11px] font-mono tracking-widest text-white/50">
-<a href="#work" class="hover:text-white">WORK</a>
-<a href="#lab" class="hover:text-white">LIVE LAB</a>
-<a href="#products" class="hover:text-white">PRODUCTS</a>
-<a href="#guides" class="hover:text-white">GUIDES</a>
- </div>
+  ── Registering your app ID ──────────────────────────────────────────────
+  1. Open https://api.deriv.com and register an application there
+     (the "Application Manager" / app-registration page). Copy the
+     "App ID" you are given (numbers only).
+  2. Replace the placeholder in the script's `const APP_ID = 'YOUR_APP_ID';`
+     below with your real App ID. That is the only place the ID appears —
+     the WebSocket URL and the OAuth redirect both read it from that
+     constant.
+  3. Host this file (index.html) on any host — static hosting, GitHub Pages,
+     Vercel, a server, etc. OAuth requires a registered redirect URL, so add
+     the absolute URL of this page in the app registration on Deriv's side.
+  4. Open it: you will see a "Log in with Deriv" button — click it, log in
+     with your Deriv account, approve the app and you are logged in.
+     (If you arrive with ?token1=…&acct1=… in the URL, it logs in
+     automatically.)
+  ─────────────────────────────────────────────────────────────────────────
+-->
+<style>
+/* =====================================================================
+   DB TRADERS — Volatility Dashboard (styled after dbtraders.com)
+   Dark palette, compact panels, tab navigation — fully self-contained.
+   ===================================================================== */
+:root {
+  --bg: #0b0c13;
+  --bg-2: #131621;
+  --panel: #1a1e2a;
+  --panel-2: #13151d;
+  --fg: #eceef4;
+  --fg-dim: #98a0b2;
+  --fg-faint: #616a7d;
+  --border: #272b3a;
+  --border-2: #313850;
+  --accent: #ffb74d;
+  --accent-2: #ffa33d;
+  --accent-glow: rgba(255, 183, 77, 0.2);
+  --green: #34d399;
+  --red: #f87171;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --mono: "SFMono-Regular", "Menlo", "Consolas", monospace;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+a { color: var(--accent); }
+button, input, select, textarea { font: inherit; }
+
+/* ---------- toasts ---------- */
+.toasts {
+  position: fixed; top: 16px; right: 16px; z-index: 60;
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+}
+.toast {
+  background: var(--panel-2);
+  border: 1px solid var(--border-2);
+  color: var(--fg);
+  padding: 9px 13px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  font-size: 12.5px;
+  max-width: 320px;
+}
+.toast-error { border-color: rgba(248, 113, 113, 0.45); }
+.toast-warn  { border-color: rgba(255, 183, 77, 0.35); }
+.toast-info, .toast-success { border-color: rgba(52, 211, 153, 0.3); }
+
+/* ---------- header ---------- */
+.app-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 8px 18px; background: var(--bg-2); border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow); flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-logo {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #14121a; font-weight: 700; font-size: 14px; letter-spacing: .3px;
+  display: grid; place-items: center; box-shadow: 0 2px 10px rgba(255,183,77,.35);
+}
+.brand-text { font-size: 15px; font-weight: 700; letter-spacing: .5px; }
+.conn-status { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-2); }
+.conn-status.ok { color: var(--green); border-color: rgba(52, 211, 153, .45); }
+.conn-status { color: var(--red); }
+.acct-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.acct-id { font-variant-numeric: tabular-nums; font-size: 13px; }
+.badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border-2); color: var(--fg-faint); font-weight: 600; }
+.badge.demo { color: var(--blue); border-color: rgba(96, 165, 250, .45); }
+.badge.real { color: var(--accent); border-color: rgba(255, 183, 77, .45); }
+.balance { font-variant-numeric: tabular-nums; font-size: 13px; }
+
+/* ---------- toolbar (market dropdown) ---------- */
+.toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 10px 18px;
+  border-bottom: 1px solid var(--border); background: var(--bg-2); flex-wrap: wrap;
+}
+.market-label { color: var(--fg-faint); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.market-select { max-width: 340px; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); display: inline-block; animation: pulse 1.4s infinite; }
+@keyframes pulse { 0%, 100% { opacity: .35 } 50% { opacity: 1 } }
+.live-tick { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 160px; }
+
+/* ---------- tabs ---------- */
+.tabs {
+  display: flex; gap: 4px; padding: 10px 16px 0; margin-bottom: -1px;
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  background: none; border: none; color: var(--fg-dim); cursor: pointer;
+  font-size: 12.5px; padding: 10px 14px; border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid transparent; margin-bottom: 1px;
+}
+.tab-btn:hover { color: var(--fg); background: var(--panel); }
+.tab-btn.active { color: var(--fg); background: var(--panel); border-bottom-color: var(--accent); }
+
+/* ---------- main / panels ---------- */
+.main { padding: 14px 18px; max-width: 1520px; margin: 0 auto; width: 100%; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.panel {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+}
+.panel-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.panel-head h2 { font-size: 12.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--fg-dim); }
+.panel-head h3 { font-size: 15px; }
+.sub { font-size: 11.5px; color: var(--fg-faint); }
+.muted { color: var(--fg-dim); font-size: 12px; }
+
+/* ---------- buttons ---------- */
+.btn {
+  background: var(--panel-2); color: var(--fg); border: 1px solid var(--border-2);
+  padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+.btn:hover { background: #1d1f28; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-sm { padding: 6px 10px; font-size: 12px; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #14121a; font-weight: 600; }
+.btn-primary:hover { background: var(--accent-2); }
+.btn-outline { border-color: var(--border-2); }
+.btn-danger { color: var(--red); border-color: rgba(248, 113, 113, .3); }
+.btn-danger:hover { background: rgba(248, 113, 113, .12); }
+
+/* ---------- forms ---------- */
+.form-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 12px; }
+.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.form-grid-2 label.full { grid-column: 1 / -1; }
+.form-grid label { display: grid; gap: 4px; font-size: 12px; color: var(--fg-dim); }
+.form-grid label.full { grid-column: 1 / -1; }
+input, select {
+  background: var(--panel-2); color: var(--fg); border: 1px solid var(--border-2);
+  padding: 7px 9px; border-radius: 7px; font-size: 13px; width: 100%;
+}
+input[type="number"] { -moz-appearance: textfield; }
+input[type="checkbox"] { width: auto; }
+
+/* ---------- tables ---------- */
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.table th, .table td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.table th { color: var(--fg-dim); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.table td.mono, .table th.mono { font-family: var(--mono); }
+.table td.pos { color: var(--green); }
+.table td.neg { color: var(--red); }
+.table td.right { text-align: right; }
+.pct { text-align: right; }
+.empty { color: var(--fg-faint); font-size: 12px; padding: 6px 0; }
+
+/* ---------- manual trade ---------- */
+.tick-row { display: flex; align-items: baseline; gap: 14px; }
+.tick-price { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.digit-box { font-size: 15px; padding: 4px 12px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--border-2); }
+.mt-chart { width: 100%; height: 96px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; margin: 10px 0; }
+.payout-row { display: flex; align-items: baseline; gap: 10px; margin: 8px 0; }
+.payout { font-size: 14px; color: var(--accent); font-weight: 600; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+/* ---------- open contracts / recent trades ---------- */
+.open-head { display: flex; align-items: baseline; justify-content: space-between; }
+
+/* ---------- analysis ---------- */
+.bars-chart { width: 100%; height: 132px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; }
+.bar-labels { color: var(--fg-faint); font-size: 12px; margin-top: 4px; }
+.strip { display: flex; gap: 5px; flex-wrap: wrap; }
+.strip-cell {
+  width: 26px; height: 34px; border-radius: 7px; border: 1px solid var(--border-2);
+  background: var(--panel-2); color: var(--fg-faint); font-size: 13px;
+  display: grid; place-items: center; transition: all .15s;
+}
+.strip-cell.hot {
+  border-color: var(--accent); color: #14121a; background: var(--accent); font-weight: 700;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.hotcold { display: flex; gap: 6px; flex-wrap: wrap; }
+.hotcold-cell {
+  width: 36px; height: 28px; border-radius: 6px; border: 1px solid var(--border-2);
+  background: var(--panel-2); color: var(--fg-faint); font-size: 10px;
+  display: grid; place-items: center; font-weight: 700;
+}
+.hotcold-cell.hot     { color: #14121a; background: var(--accent); border-color: var(--accent); }
+.hotcold-cell.cold    { color: #fff; background: rgba(248,113,113,.16); border-color: rgba(248,113,113,.45); }
+.hotcold-cell.neutral { color: var(--fg-dim); }
+
+/* ---------- bots ---------- */
+.log {
+  font-family: var(--mono); font-size: 11.5px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; max-height: 300px; overflow-y: auto;
+}
+.botlog { padding: 2px 0; }
+.botlog.info    { color: var(--fg-dim); }
+.botlog.error   { color: var(--red); }
+.botlog.warn    { color: var(--accent); }
+.botlog.success { color: var(--green); }
+.bot-stats { display: flex; gap: 22px; margin-top: 10px; flex-wrap: wrap; }
+.lbl { display: block; font-size: 11px; color: var(--fg-faint); }
+.val { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+.bot-status { font-size: 12px; color: var(--green); }
+.bot-status.running::before {
+  content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green); margin-right: 6px; animation: pulse 1.2s infinite;
+}
+.bot-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ---------- entry points ---------- */
+.cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.signal-card {
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--panel-2);
+}
+.sc-head { display: flex; align-items: center; justify-content: space-between; }
+.sc-head h3 { font-size: 14px; }
+.sc-badge {
+  font-size: 10.5px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border-2);
+  color: var(--fg-faint); font-weight: 600; letter-spacing: .04em;
+}
+.sc-badge.now { color: var(--green); border-color: rgba(52, 211, 153, .5); background: rgba(52, 211, 153, .1); }
+.sc-mid { display: flex; gap: 14px; align-items: baseline; margin: 8px 0; flex-wrap: wrap; }
+.sc-hit { font-size: 18px; font-weight: 700; }
+.sc-strength { font-size: 11px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border-2); }
+.sc-strength.strong { color: var(--green); border-color: rgba(52, 211, 153, .45); }
+.sc-strength.medium { color: var(--accent); }
+.sc-strength.weak   { color: var(--red); }
+.sc-trend { font-size: 15px; font-weight: 700; color: var(--fg-dim); min-width: 18px; }
+.sc-desc { color: var(--fg-faint); font-size: 12px; margin-bottom: 8px; }
+.sc-rules { display: grid; gap: 8px; }
+.rule-lbl { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-dim); }
+.rule-input { width: 60px !important; }
+.chk { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-dim); }
+.chk input { width: auto; }
+.sc-actions { margin-top: 10px; }
+.scan-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.scan-result { color: var(--fg-faint); font-size: 12px; }
+
+/* ---------- footer ---------- */
+.footer {
+  text-align: center; padding: 18px; color: var(--fg-faint); font-size: 12px;
+  border-top: 1px solid var(--border); background: var(--bg-2);
+}
+.footer a { color: var(--accent); }
+
+/* ---------- modal ---------- */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(5, 6, 12, .72);
+  display: grid; place-items: center; z-index: 100;
+}
+.modal-card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px 22px; max-width: 420px; width: 90%; box-shadow: var(--shadow); text-align: center;
+}
+.modal-card h3 { margin: 0 0 8px; }
+.modal-card p { color: var(--fg-dim); margin: 0 0 16px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 680px) {
+  .app-header { padding: 10px 12px; }
+  .toolbar { padding: 10px 12px; }
+  .tabs { padding: 10px 12px 0; }
+  .main { padding: 12px 12px; }
+  .form-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-grid-2 { grid-template-columns: 1fr; }
+  .cards { grid-template-columns: 1fr; }
+  .tab-btn { padding: 9px 10px; font-size: 13px; }
+  .acct-info { gap: 6px; }
+  .tick-row { align-items: baseline; }
+}
+</style>
+</head>
+<body>
+
+<div class="toasts" id="toasts"></div>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-logo">DB</div>
+    <span class="brand-text">DB TRADERS</span>
+    <span class="conn-status" id="conn-status">Connecting…</span>
+  </div>
+  <div class="acct-info">
+    <span class="acct-id" id="acct-id">—</span>
+    <span class="badge" id="acct-badge"></span>
+    <span class="balance" id="balance">—</span>
+    <button class="btn-sm" id="login-btn">Log in with Deriv</button>
+    <button class="btn-sm btn-outline" id="logout" style="display:none">Log out</button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <label class="market-label" for="market-select">Market</label>
+  <select id="market-select" class="market-select"></select>
+  <span class="live-dot" title="Live tick stream"></span>
+  <span class="live-tick" id="live-tick">—</span>
+  <button class="btn-sm" id="refresh-btn" title="Reload tick history">↻ Refresh</button>
 </div>
-<div class="flex items-center gap-3">
- <div class="hidden md:flex items-center gap-2 text-[11px] font-mono text-white/40 mr-2"><span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>AI ASSISTANT ONLINE</div>
- <button onclick="document.getElementById('chatWidget').classList.remove('hidden')" class="hidden md:flex px-4 py-2.5 bg-white/10 border border-white/15 rounded-full text-[11px] font-mono tracking-widest hover:bg-white/15">ASK AI →</button>
- <a href="#contact" class="px-5 py-2.5 bg-yellow-400 text-black rounded-full text-[11px] font-bold tracking-widest hover:bg-yellow-300">GET QUOTE</a>
-</div>
- </div>
+
+<nav class="tabs" role="tablist">
+  <button class="tab-btn active" data-tab="manual">Manual Trade</button>
+  <button class="tab-btn" data-tab="bots">Auto Bots</button>
+  <button class="tab-btn" data-tab="analysis">Analysis</button>
+  <button class="tab-btn" data-tab="entry">Entry Points</button>
 </nav>
 
-<!-- HERO - Architect Focus -->
-<section class="relative min-h-[92vh] flex items-center pt-[68px] overflow-hidden">
- <canvas id="heroCanvas" class="absolute inset-0 w-full h-full"></canvas>
- <div class="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/30"></div>
- <div class="absolute inset-0 bg-gradient-to-t from-[#070707] via-transparent to-transparent"></div>
- <div class="relative z-10 max-w-[1600px] mx-auto px-6 lg:px-10 w-full grid lg:grid-cols-[1.15fr_0.85fr] gap-12 items-center py-16">
-<div>
- <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-yellow-400/10 border border-yellow-400/20 rounded-full text-[11px] font-mono tracking-widest text-yellow-400 mb-6">
-<span class="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse"></span> ARCHITECT • 50+ BUILDINGS VISUALIZED IN 3D
- </div>
- <h1 class="font-syne font-800 text-[48px] lg:text-[78px] leading-[0.85] tracking-[-0.04em]">
-I MAKE<br>
-<span class="text-transparent" style="-webkit-text-stroke:1.5px white">CONSTRUCTION</span><br>
-<span class="text-yellow-400">CRYSTAL CLEAR</span>
- </h1>
- <p class="mt-6 text-[17px] lg:text-[19px] leading-[1.5] text-white/60 max-w-[560px]">
-Tough market for architects? Clients can't read 2D plans. Contractors misinterpret. <span class="text-white">THE VERT fixes that.</span> I show every building as a live, explodable 3D — every bolt, layer, and product — so clients say YES faster.
- </p>
- <div class="mt-8 flex flex-wrap gap-3">
-<a href="#work" class="px-7 py-4 bg-yellow-400 text-black rounded-full font-bold text-[12px] tracking-widest hover:bg-yellow-300 flex items-center gap-2">SEE BUILDING SAMPLES <span class="w-5 h-5 bg-black text-yellow-400 rounded-full flex items-center justify-center">↗</span></a>
-<a href="#lab" class="px-7 py-4 bg-white text-black rounded-full font-bold text-[12px] tracking-widest hover:bg-white/90">TRY LIVE 3D LAB →</a>
- </div>
- <div class="mt-10 flex flex-wrap gap-8 border-t border-white/10 pt-6 max-w-[520px]">
-<div><div class="font-syne font-800 text-[26px] leading-none">127%</div><div class="text-[11px] font-mono text-white/40 mt-1">FASTER CLIENT APPROVAL WITH 3D</div></div>
-<div><div class="font-syne font-800 text-[26px] leading-none">Live 3D</div><div class="text-[11px] font-mono text-white/40 mt-1">EXPLODED BUILDINGS + EQUIPMENT</div></div>
-<div><div class="font-syne font-800 text-[26px] leading-none">24/7</div><div class="text-[11px] font-mono text-white/40 mt-1">AI ASSISTANT FOR CLIENTS</div></div>
- </div>
-</div>
-<!-- Hero Card - Building Exploded -->
-<div class="relative hidden lg:block h-[620px]">
- <div class="absolute inset-0 bg-[#111]/80 backdrop-blur-xl rounded-[28px] border border-white/10 overflow-hidden">
-<div class="p-5 flex justify-between items-center border-b border-white/10">
- <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 bg-red-400 rounded-full"></div><div class="w-2.5 h-2.5 bg-yellow-400 rounded-full"></div><div class="w-2.5 h-2.5 bg-green-400 rounded-full"></div><span class="ml-3 font-mono text-[11px] text-white/50">THE_VERT_BUILDING_LIVE.glb — 47% EXPLODED</span></div>
- <div class="px-2.5 py-1 bg-green-400/15 text-green-400 rounded-full text-[10px] font-mono">● CLIENT VIEWING</div>
-</div>
-<div class="p-4">
- <div class="aspect-[4/3] bg-black rounded-2xl border border-white/10 overflow-hidden relative">
-<canvas id="miniCanvas" class="w-full h-full"></canvas>
-<div class="absolute top-3 left-3 px-3 py-1.5 bg-black/70 backdrop-blur rounded-full text-[10px] font-mono">DRAG • SCROLL • EXPLODE</div>
-<div class="absolute bottom-3 right-3 px-3 py-1.5 bg-yellow-400 text-black rounded-full text-[10px] font-mono font-bold" id="miniLabel">LIVE 3D</div>
- </div>
- <div class="mt-4 grid grid-cols-3 gap-2">
-<div class="bg-white text-black rounded-xl p-3"><div class="text-[10px] font-mono opacity-60">PROJECT</div><div class="font-bold text-[12px]">EFH </div><div class="text-[10px] font-mono">Timber + Concrete</div></div>
-<div class="bg-white/5 border border-white/10 rounded-xl p-3"><div class="text-[10px] font-mono text-white/40">LAYERS</div><div class="font-bold text-[12px]">12 Layers</div><div class="text-[10px] font-mono text-white/40">Foundation → Roof</div></div>
-<div class="bg-yellow-400 text-black rounded-xl p-3"><div class="text-[10px] font-mono opacity-70">STATUS</div><div class="font-bold text-[12px]">Client Approved ✓</div><div class="text-[10px] font-mono">In 2.1s</div></div>
- </div>
- <div class="mt-4 p-3 bg-white/5 border border-white/10 rounded-xl flex gap-3 items-center">
-<div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-[12px]">👷</div>
-<div class="text-[11px] leading-tight"><span class="font-bold">AI Assistant:</span> <span class="text-white/60">"This shows foundation, insulation, and scaffold system. Want the product list?"</span></div>
- </div>
-</div>
- </div>
-</div>
- </div>
-</section>
+<main class="main">
 
-<!-- WORK / BUILDING SAMPLES -->
-<section id="work" class="border-t border-white/10 bg-[#0c0c0c]">
- <div class="max-w-[1600px] mx-auto px-6 lg:px-10 py-20">
-<div class="flex flex-wrap justify-between items-end gap-6 mb-10">
- <div><div class="font-mono text-[11px] tracking-[0.3em] text-yellow-400 mb-3">SELECTED WORK — SAMPLES OF COMPLETE BUILDINGS</div><h2 class="font-syne font-800 text-[38px] lg:text-[58px] leading-[0.9]">BUILDINGS<br><span class="text-white/20">EXPLODED</span></h2></div>
- <div class="max-w-[420px] text-[14px] text-white/50 leading-relaxed">Each project is delivered as live 3D exploded view. Clients can see every layer — foundation, walls, insulation, roof — and click any product to see equipment & specs. This is how I win jobs.</div>
-</div>
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
- <!-- Project 1 -->
- <div class="group bg-[#111] border border-white/10 rounded-[24px] overflow-hidden hover:border-yellow-400/40 transition">
-<div class="aspect-[16/10] bg-gradient-to-br from-[#1a1a1a] to-black relative overflow-hidden p-6 flex items-end">
- <div class="absolute inset-0 opacity-40"><canvas class="proj-canvas w-full h-full" data-type="house"></canvas></div>
- <div class="relative z-10"><div class="px-2.5 py-1 bg-yellow-400 text-black rounded-full text-[10px] font-mono font-bold inline-block">LIVE 3D • 12 LAYERS</div><div class="font-syne font-700 text-[22px] leading-none mt-3">EFH — </div><div class="text-[11px] font-mono text-white/50 mt-1">Timber Frame + Concrete Base</div></div>
-</div>
-<div class="p-5">
- <div class="flex flex-wrap gap-2 mb-4"><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">FOUNDATION</span><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">INSULATION</span><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">ROOF SYSTEM</span></div>
- <div class="text-[13px] text-white/60 leading-relaxed">120m² family house. Exploded view shows strip foundation, timber walls, mineral wool, and zinc roof. Client approved in one meeting.</div>
- <div class="mt-4 flex gap-2"><button onclick="scrollToLab('house')" class="flex-1 py-2.5 bg-white text-black rounded-full text-[11px] font-bold tracking-widest">EXPLODE LIVE →</button><button class="px-4 py-2.5 bg-white/10 rounded-full text-[11px] font-mono">PLANS</button></div>
-</div>
- </div>
- <!-- Project 2 -->
- <div class="group bg-[#111] border border-white/10 rounded-[24px] overflow-hidden hover:border-yellow-400/40 transition">
-<div class="aspect-[16/10] bg-gradient-to-br from-[#1e1a0a] to-black relative overflow-hidden p-6 flex items-end">
- <div class="absolute inset-0 opacity-40"><canvas class="proj-canvas w-full h-full" data-type="commercial"></canvas></div>
- <div class="relative z-10"><div class="px-2.5 py-1 bg-white text-black rounded-full text-[10px] font-mono font-bold inline-block">COMMERCIAL • 8 LAYERS</div><div class="font-syne font-700 text-[22px] leading-none mt-3">Studio Loft — </div><div class="text-[11px] font-mono text-white/50 mt-1">Steel + Glass + Scaffold System</div></div>
-</div>
-<div class="p-5">
- <div class="flex flex-wrap gap-2 mb-4"><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">STEEL FRAME</span><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">SCAFFOLD</span><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">GLAZING</span></div>
- <div class="text-[13px] text-white/60 leading-relaxed">450m² conversion. Live 3D shows steel skeleton, temporary scaffold, and facade system. Contractor used it as assembly guide.</div>
- <div class="mt-4 flex gap-2"><button onclick="scrollToLab('commercial')" class="flex-1 py-2.5 bg-white text-black rounded-full text-[11px] font-bold tracking-widest">EXPLODE LIVE →</button><button class="px-4 py-2.5 bg-white/10 rounded-full text-[11px] font-mono">CASE STUDY</button></div>
-</div>
- </div>
- <!-- Project 3 -->
- <div class="group bg-[#111] border border-white/10 rounded-[24px] overflow-hidden hover:border-yellow-400/40 transition">
-<div class="aspect-[16/10] bg-gradient-to-br from-[#0a1a1a] to-black relative overflow-hidden p-6 flex items-end">
- <div class="absolute inset-0 opacity-40"><canvas class="proj-canvas w-full h-full" data-type="warehouse"></canvas></div>
- <div class="relative z-10"><div class="px-2.5 py-1 bg-white/10 border border-white/20 text-white rounded-full text-[10px] font-mono font-bold inline-block">INDUSTRIAL • 15 LAYERS</div><div class="font-syne font-700 text-[22px] leading-none mt-3">Warehouse — </div><div class="text-[11px] font-mono text-white/50 mt-1">Concrete + Equipment Showcase</div></div>
-</div>
-<div class="p-5">
- <div class="flex flex-wrap gap-2 mb-4"><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">FOUNDATION SLAB</span><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">CRANE</span><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">COMPRESSOR</span></div>
- <div class="text-[13px] text-white/60 leading-relaxed">1200m² logistics hall. Exploded view includes all construction equipment used on site — crane, compressor, excavator. Client loved transparency.</div>
- <div class="mt-4 flex gap-2"><button onclick="scrollToLab('engine')" class="flex-1 py-2.5 bg-yellow-400 text-black rounded-full text-[11px] font-bold tracking-widest">EXPLODE EQUIPMENT →</button><button class="px-4 py-2.5 bg-white/10 rounded-full text-[11px] font-mono">PRODUCTS</button></div>
-</div>
- </div>
-</div>
- </div>
-</section>
+  <!-- ───────────────── Tab 1: Manual Trade ───────────────── -->
+  <section class="tab-panel active" id="tab-manual">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Live Tick — <span id="mt-symbol"></span></h2>
+        <span class="sub" id="mt-time">—</span>
+      </div>
+      <div class="tick-row">
+        <div class="tick-price" id="mt-price">—</div>
+        <div class="tick-digit"><span class="digit-box" id="mt-digit">?</span></div>
+      </div>
+      <canvas class="mt-chart" id="mt-chart"></canvas>
+    </div>
 
-<!-- LIVE LAB - For Architects -->
-<section id="lab" class="border-t border-white/10 bg-[#0f0f0f]">
- <div class="max-w-[1600px] mx-auto px-6 lg:px-10 py-12">
-<div class="flex flex-wrap items-end justify-between gap-6 mb-8">
- <div><div class="flex items-center gap-3 mb-3"><span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span><div class="font-mono text-[11px] tracking-[0.3em] text-green-400">THE VERT LAB — FOR ARCHITECTS & CLIENTS</div></div><h2 class="font-syne font-800 text-[36px] lg:text-[52px] leading-[0.9]">SHOW CLIENTS<br>EVERY <span class="text-yellow-400">BOLT & LAYER</span></h2><div class="mt-3 max-w-[520px] text-[14px] text-white/50">This is your secret weapon. Instead of flat PDFs, send clients a link where they can explode the building themselves. They understand, trust, and pay faster.</div></div>
- <div class="flex gap-3"><button id="exportPng" class="px-4 py-2.5 bg-white/10 border border-white/15 rounded-full text-[11px] font-mono">EXPORT PNG FOR PROPOSAL</button><button id="exportGlb" class="px-5 py-2.5 bg-yellow-400 text-black rounded-full text-[11px] font-bold tracking-widest">EXPORT GLB FOR CLIENT LINK</button></div>
-</div>
-<div class="grid lg:grid-cols-[300px_1fr_300px] gap-4 h-[760px] bg-black rounded-[24px] border border-white/10 overflow-hidden">
- <!-- Left -->
- <div class="border-r border-white/10 bg-[#111] p-4 flex flex-col gap-5 overflow-y-auto no-scrollbar">
-<div><div class="text-[11px] font-mono tracking-widest text-white/40 mb-3">BUILDING LAYERS & EQUIPMENT</div>
- <div class="grid gap-2">
-<button data-model="house" class="model-btn active text-left p-3 rounded-xl bg-yellow-400 text-black"><div class="font-bold text-[13px]">🏠 House Layers — Full Building</div><div class="text-[11px] opacity-70 font-mono">12 layers • Foundation → Roof</div></button>
-<button data-model="commercial" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[13px]">🏢 Commercial Frame</div><div class="text-[11px] text-white/50 font-mono">8 parts • Steel + Glass</div></button>
-<button data-model="drill" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[13px]">🔧 Power Tools</div><div class="text-[11px] text-white/50 font-mono">8 parts • For site work</div></button>
-<button data-model="excavator" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[13px]">🚜 Excavator & Foundation</div><div class="text-[11px] text-white/50 font-mono">14 parts • Earthworks</div></button>
-<button data-model="scaffold" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[13px]">🏗️ Scaffold System</div><div class="text-[11px] text-white/50 font-mono">10 parts • Safety + Access</div></button>
-<button data-model="engine" class="model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"><div class="font-bold text-[13px]">⚙️ Compressor / Engine</div><div class="text-[11px] text-white/50 font-mono">22 parts • Site equipment</div></button>
- </div>
-</div>
-<div><div class="text-[11px] font-mono tracking-widest text-white/40 mb-3">CLIENT UPLOAD</div>
- <label class="block w-full p-4 border-2 border-dashed border-white/15 rounded-xl hover:border-yellow-400/50 hover:bg-yellow-400/5 cursor-pointer transition"><div class="text-center"><div class="text-xl">📦</div><div class="text-[11px] font-bold mt-1">Drop Building GLB / IFC</div><div class="text-[10px] font-mono text-white/40">From Revit, SketchUp, Blender</div></div><input type="file" id="fileInput" accept=".glb,.gltf,.fbx,.obj" class="hidden"></label>
- <div class="mt-3 p-3 bg-yellow-400/10 border border-yellow-400/20 rounded-xl text-[11px] leading-relaxed"><span class="font-bold text-yellow-400">NO MODEL? AI IT:</span><br><span class="text-white/70">Meshy.ai → "modern timber house exploded" → GLB → Drop here. 2 min.</span></div>
-</div>
-<div class="mt-auto p-3 bg-white text-black rounded-xl"><div class="font-bold text-[12px]">💡 How architects win jobs:</div><div class="text-[11px] mt-1 leading-relaxed opacity-70">Send client this link. They explode the building themselves. They see foundation, insulation, scaffold, equipment. Trust = signed contract.</div></div>
- </div>
- <!-- Center -->
- <div class="relative bg-[#0a0a0a] overflow-hidden">
-<canvas id="canvas" class="w-full h-full block"></canvas>
-<div class="absolute top-4 left-4 flex gap-2"><div class="px-3 py-1.5 bg-white/90 text-black rounded-full text-[11px] font-mono flex gap-3"><span>PARTS: <b id="statParts">12</b></span><span>TRIS: <b id="statTris">18k</b></span><span>FPS: <b id="statFps">60</b></span></div></div>
-<div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white text-black rounded-full px-5 py-3 flex items-center gap-4 shadow-2xl">
- <span class="text-[11px] font-mono font-bold tracking-widest">EXPLOSION</span><span id="explodeValue" class="text-[11px] font-mono bg-black text-white px-2 py-1 rounded-full">0%</span>
- <input id="explodeSlider" type="range" min="0" max="100" value="0" class="w-[200px] lg:w-[260px]">
- <button id="btnImplode" class="px-3 py-1.5 bg-black/10 rounded-full text-[10px] font-mono font-bold">IMPLODE</button>
- <button id="btnExplode" class="px-3 py-1.5 bg-yellow-400 rounded-full text-[10px] font-mono font-bold">EXPLODE</button>
- <button id="btnAnimate" class="px-3 py-1.5 bg-black text-white rounded-full text-[10px] font-mono font-bold">▶</button>
-</div>
- </div>
- <!-- Right -->
- <div class="border-l border-white/10 bg-[#111] p-4 flex flex-col gap-4 overflow-y-auto no-scrollbar">
-<div class="bg-white text-black rounded-xl p-4"><div class="text-[11px] font-mono font-bold tracking-widest mb-3">CLIENT VIEW OPTIONS</div>
- <label class="flex justify-between py-2 text-[12px] cursor-pointer"><span>Trail Lines (shows assembly)</span><input id="toggleTrails" type="checkbox" checked></label>
- <label class="flex justify-between py-2 text-[12px] cursor-pointer"><span>Auto-Rotate for presentation</span><input id="toggleRotate" type="checkbox"></label>
- <label class="flex justify-between py-2 text-[12px] cursor-pointer"><span>X-Ray (see through walls)</span><input id="toggleXray" type="checkbox"></label>
-</div>
-<div class="bg-[#1a1a1a] border border-white/10 rounded-xl p-4"><div class="text-[11px] font-mono font-bold tracking-widest mb-3">EXPLOSION FOR CLIENTS</div>
- <div class="grid grid-cols-2 gap-2"><button data-preset="vertical" class="preset-btn py-2 bg-yellow-400 text-black rounded-lg text-[11px] font-mono font-bold">VERTICAL ★ (Building)</button><button data-preset="radial" class="preset-btn py-2 bg-white/10 rounded-lg text-[11px] font-mono">RADIAL</button><button data-preset="linear" class="preset-btn py-2 bg-white/10 rounded-lg text-[11px] font-mono">LINEAR (Manual)</button><button data-preset="sphere" class="preset-btn py-2 bg-white/10 rounded-lg text-[11px] font-mono">SPHERE</button></div>
- <div class="mt-3 text-[11px] text-white/50 leading-relaxed">Vertical is best for buildings — foundation at bottom, roof on top. Client instantly understands layers.</div>
-</div>
-<div class="bg-black border border-white/10 rounded-xl p-4"><div class="text-[11px] font-mono font-bold tracking-widest text-yellow-400 mb-2">WHAT CLIENT SEES</div>
- <div id="partList" class="space-y-1.5 max-h-[160px] overflow-y-auto no-scrollbar text-[11px] font-mono"></div>
-</div>
-<div class="mt-auto p-4 bg-yellow-400 text-black rounded-xl"><div class="font-bold text-[13px] leading-tight">Send this to client = higher close rate</div><div class="text-[11px] mt-2 opacity-80">Copy link, client opens on phone, explodes building with finger, sees your expertise. No app needed. AR works.</div><button onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied! Send to client.')" class="mt-3 w-full py-2.5 bg-black text-yellow-400 rounded-full text-[11px] font-mono font-bold">COPY CLIENT LINK</button></div>
- </div>
-</div>
- </div>
-</section>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>Contract</h2><span class="sub">Buy contracts on the live market</span></div>
+        <div class="form-grid">
+          <label>Contract type
+            <select id="contract-type">
+              <option value="OVER">Over</option>
+              <option value="UNDER">Under</option>
+              <option value="EVEN">Even</option>
+              <option value="ODD">Odd</option>
+              <option value="MATCHES">Matches</option>
+              <option value="DIFFERS">Differs</option>
+              <option value="RISE">Rise</option>
+              <option value="FALL">Fall</option>
+            </select>
+          </label>
+          <label>Barrier digit <input id="contract-barrier" type="number" min="0" max="9" value="3" placeholder="0–9"></label>
+          <label>Stake <input id="stake" type="number" step="0.01" min="0.01" value="0.50"></label>
+          <label>Duration <input id="duration" type="number" min="1" value="5"></label>
+          <label>Unit
+            <select id="duration-unit">
+              <option value="ticks">ticks</option>
+              <option value="seconds">seconds</option>
+              <option value="minutes">minutes</option>
+            </select>
+          </label>
+        </div>
+        <div class="payout-row">
+          <span class="lbl">Payout preview</span>
+          <span class="payout" id="payout-preview">Waiting for proposal…</span>
+        </div>
+        <div class="muted" id="payout-note">Digit contracts: trade when the last digit is above/below the barrier as selected. Even/Odd and Rise/Fall have no barrier.</div>
+        <button class="btn-primary" id="buy-btn">Buy Contract</button>
+        <div class="muted" id="buy-hint">Places a contract via Deriv's buy API using the current proposal.</div>
+      </div>
 
-<!-- PRODUCTS & EQUIPMENT GUIDES -->
-<section id="products" class="border-t border-white/10 bg-[#080808]">
- <div class="max-w-[1600px] mx-auto px-6 lg:px-10 py-20">
-<div class="flex flex-wrap justify-between items-end gap-6 mb-10"><div><div class="font-mono text-[11px] tracking-[0.3em] text-yellow-400 mb-3">SITE CONSTRUCTION PRODUCTS & EQUIPMENT</div><h2 class="font-syne font-800 text-[36px] lg:text-[54px] leading-[0.9]">PRODUCTS<br><span class="text-white/20">EXPLAINED IN 3D</span></h2></div><div class="max-w-[420px] text-[14px] text-white/50 leading-relaxed">Clients don't know what a scaffold clamp or compressor does. I show them live 3D exploded, with specs, guides, and where it's used in their building.</div></div>
-<div class="grid lg:grid-cols-3 gap-5">
- <div class="bg-[#111] border border-white/10 rounded-[24px] p-6"><div class="flex justify-between items-start"><div class="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center text-black text-[22px]">🏗️</div><div class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">GUIDE • 3D</div></div><div class="font-bold text-[18px] mt-4">Scaffold Systems — Which One?</div><div class="text-[13px] text-white/50 mt-2 leading-relaxed">Facade scaffold vs. modular vs. mobile. Exploded view shows clamp, frame, plank, safety. When to use which, cost per m² in .</div><div class="mt-4 grid grid-cols-3 gap-2 text-[10px] font-mono"><div class="bg-black border border-white/10 rounded-lg p-2 text-center"><div class="font-bold">Clamp</div><div class="text-white/40">Forged steel</div></div><div class="bg-black border border-white/10 rounded-lg p-2 text-center"><div class="font-bold">Frame</div><div class="text-white/40">Galvanized</div></div><div class="bg-black border border-white/10 rounded-lg p-2 text-center"><div class="font-bold">Plank</div><div class="text-white/40">Wood/Alu</div></div></div><button onclick="scrollToLab('scaffold')" class="mt-5 w-full py-3 bg-white text-black rounded-full text-[11px] font-bold tracking-widest">EXPLODE SCAFFOLD LIVE →</button></div>
- <div class="bg-[#111] border border-white/10 rounded-[24px] p-6"><div class="flex justify-between items-start"><div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-black text-[22px]">🚜</div><div class="px-2.5 py-1 bg-yellow-400 text-black rounded-full text-[10px] font-mono font-bold">EQUIPMENT</div></div><div class="font-bold text-[18px] mt-4">Earthworks — Excavator & Foundation</div><div class="text-[13px] text-white/50 mt-2 leading-relaxed">Mini excavator vs. CAT 320. What you need for 120m² house foundation in soil. Fuel, time, cost breakdown with 3D.</div><div class="mt-4 flex gap-2"><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">0.8t - 20t</span><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">Hydraulic</span><span class="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-mono">GPS Grade</span></div><button onclick="scrollToLab('excavator')" class="mt-5 w-full py-3 bg-yellow-400 text-black rounded-full text-[11px] font-bold tracking-widest">EXPLODE EXCAVATOR LIVE →</button></div>
- <div class="bg-[#111] border border-white/10 rounded-[24px] p-6"><div class="flex justify-between items-start"><div class="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center text-[22px]">🔧</div><div class="px-2.5 py-1 bg-white/10 border border-white/10 rounded-full text-[10px] font-mono">PRODUCT GUIDE</div></div><div class="font-bold text-[18px] mt-4">Power Tools — Site Essentials</div><div class="text-[13px] text-white/50 mt-2 leading-relaxed">Drill, jackhammer, compressor — what your contractor actually uses. Exploded view shows motor, gearbox, chuck. How to spec for your building.</div><div class="mt-4 text-[11px] font-mono text-white/40">→ Includes: DeWalt, Bosch, Hilti comparison • Rental vs. buy • Safety</div><button onclick="scrollToLab('drill')" class="mt-5 w-full py-3 bg-white/10 border border-white/15 text-white rounded-full text-[11px] font-bold tracking-widest">EXPLODE TOOLS LIVE →</button></div>
-</div>
- </div>
-</section>
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h2>Open Contracts</h2><span class="sub" id="open-count">—</span></div>
+          <div id="open-contracts-panel"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Recent Trades</h2></div>
+          <div id="recent-trades"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<!-- GUIDES -->
-<section id="guides" class="border-t border-white/10 bg-[#0f0f0f]">
- <div class="max-w-[1600px] mx-auto px-6 lg:px-10 py-20 grid lg:grid-cols-[0.9fr_1.1fr] gap-12">
-<div><div class="font-mono text-[11px] tracking-[0.3em] text-yellow-400 mb-4">GUIDES — HOW I WIN CLIENTS WITH KNOWLEDGE</div><h2 class="font-syne font-800 text-[36px] lg:text-[50px] leading-[0.9]">CLIENTS HIRE<br>ARCHITECTS WHO<br><span class="text-yellow-400">TEACH</span></h2><div class="mt-6 text-[14px] text-white/50 leading-relaxed max-w-[440px]">I publish construction guides with live 3D. Clients Google "scaffold cost " → find THE VERT → see live 3D → hire me. SEO + trust + 3D = jobs.</div><div class="mt-8 space-y-4"><div class="flex gap-4 p-4 bg-[#111] border border-white/10 rounded-xl hover:border-yellow-400/30 transition cursor-pointer"><div class="w-12 h-12 bg-yellow-400 text-black rounded-xl flex items-center justify-center font-bold">01</div><div><div class="font-bold text-[14px]">Foundation Types Explained in 3D — Which for Soil?</div><div class="text-[11px] font-mono text-white/40 mt-1">1.2k views • 8 min • Includes exploded slab, strip, pile</div></div></div><div class="flex gap-4 p-4 bg-[#111] border border-white/10 rounded-xl hover:border-yellow-400/30 transition cursor-pointer"><div class="w-12 h-12 bg-white/10 border border-white/15 rounded-xl flex items-center justify-center font-bold">02</div><div><div class="font-bold text-[14px]">Scaffold Cost Calculator — Live 3D Configurator</div><div class="text-[11px] font-mono text-white/40 mt-1">890 views • Tool • Client favorite</div></div></div><div class="flex gap-4 p-4 bg-[#111] border border-white/10 rounded-xl hover:border-yellow-400/30 transition cursor-pointer"><div class="w-12 h-12 bg-white/10 border border-white/15 rounded-xl flex items-center justify-center font-bold">03</div><div><div class="font-bold text-[14px]">How to Read an Exploded Building Drawing — Client Guide</div><div class="text-[11px] font-mono text-white/40 mt-1">2.4k views • PDF + Live 3D</div></div></div></div></div>
-<div class="bg-black border border-white/10 rounded-[24px] p-6">
- <div class="font-mono text-[11px] tracking-widest text-white/40 mb-4">FREE GUIDE PREVIEW — DOWNLOADABLE PDF + LIVE 3D LINK</div>
- <div class="aspect-[16/10] bg-gradient-to-br from-[#1a1a0a] to-black rounded-xl border border-white/10 p-6 flex flex-col justify-end relative overflow-hidden">
-<div class="absolute top-4 right-4 px-3 py-1 bg-yellow-400 text-black rounded-full text-[10px] font-mono font-bold">PDF + LIVE 3D LINK</div>
-<div class="relative z-10"><div class="font-syne font-800 text-[28px] leading-[0.9]">FOUNDATION<br>GUIDE 2026</div><div class="text-[12px] font-mono text-white/50 mt-2"> soil • Costs • Timeline • 3D exploded slab</div><div class="mt-4 flex gap-2"><span class="px-2.5 py-1 bg-white text-black rounded-full text-[10px] font-mono font-bold">12 PAGES</span><span class="px-2.5 py-1 bg-white/10 border border-white/15 rounded-full text-[10px] font-mono">LIVE 3D INCLUDED</span></div></div>
- </div>
- <div class="mt-5 grid grid-cols-3 gap-3 text-[11px] font-mono"><div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center"><div class="font-bold text-[16px]">€0</div><div class="text-white/40">Free guide</div></div><div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center"><div class="font-bold text-[16px]">3D</div><div class="text-white/40">Exploded slab</div></div><div class="bg-yellow-400 text-black rounded-xl p-3 text-center"><div class="font-bold text-[16px]">Lead</div><div class="opacity-70">Captures email</div></div></div>
- <div class="mt-5 p-4 bg-yellow-400/10 border border-yellow-400/20 rounded-xl"><div class="text-[12px] font-bold">How this gets you clients:</div><div class="text-[12px] text-white/60 mt-1 leading-relaxed">Client searches "foundation " → finds your guide → enters email to get PDF + live 3D link → you get lead → AI assistant nurtures → books call. Works while you sleep.</div></div>
- <button class="mt-5 w-full py-3 bg-white text-black rounded-full text-[12px] font-bold tracking-widest">DOWNLOAD FREE GUIDE + GET LEADS →</button>
-</div>
- </div>
-</section>
+  <!-- ───────────────── Tab 2: Auto Bots ───────────────── -->
+  <section class="tab-panel" id="tab-bots">
+    <div class="panel">
+      <div class="panel-head"><h2>Bot Settings</h2><span class="sub" id="bot-sub"></span></div>
+      <div class="form-grid">
+        <label>Strategy
+          <select id="bot-strategy">
+            <option value="digit_streak">Digit Streak</option>
+            <option value="digit_freq">Digit Frequency Threshold</option>
+            <option value="even_odd">Even/Odd Imbalance</option>
+            <option value="martingale">Martingale Recovery</option>
+          </select>
+        </label>
+        <label>Market <select id="bot-market"></select></label>
+        <label>Contract
+          <select id="bot-contract">
+            <option value="OVER">Over</option>
+            <option value="UNDER">Under</option>
+            <option value="EVEN">Even</option>
+            <option value="ODD">Odd</option>
+            <option value="MATCHES">Matches</option>
+            <option value="DIFFERS">Differs</option>
+          </select>
+        </label>
+        <label>Barrier digit <input id="bot-barrier" type="number" min="0" max="9" value="3"></label>
+        <label>Stake (base) <input id="bot-stake" type="number" step="0.01" value="0.50"></label>
+        <label>Duration <input id="bot-duration" type="number" min="1" value="5"></label>
+        <label>Take profit ($) <input id="bot-take-profit" type="number" min="0" value="0"></label>
+        <label>Stop loss ($) <input id="bot-stop-loss" type="number" min="0" value="0"></label>
+        <label>Max consecutive losses <input id="bot-max-losses" type="number" min="1" value="5"></label>
+        <label>Cooldown (s) <input id="bot-cooldown" type="number" min="0" value="30"></label>
+      </div>
+      <div id="strategy-params"></div>
+      <div class="bot-actions">
+        <button class="btn-primary" id="bot-start">Start Bot</button>
+        <button class="btn" id="bot-stop" disabled>Stop Bot</button>
+        <span class="bot-status" id="bot-status">Stopped</span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Live Log</h2><span class="sub" id="bot-log-count"></span></div>
+      <div class="log" id="bot-log"></div>
+      <div class="bot-stats">
+        <div><span class="lbl">Session P/L</span><span class="val" id="bot-pl">—</span></div>
+        <div><span class="lbl">Win rate</span><span class="val" id="bot-wr">—</span></div>
+        <div><span class="lbl">Completed trades</span><span class="val" id="bot-trades">—</span></div>
+      </div>
+    </div>
+  </section>
 
-<!-- CONTACT -->
-<section id="contact" class="border-t border-white/10 bg-black">
- <div class="max-w-[1600px] mx-auto px-6 lg:px-10 py-20 grid lg:grid-cols-2 gap-12">
-<div><h2 class="font-syne font-800 text-[40px] lg:text-[64px] leading-[0.85]">LET'S BUILD<br><span class="text-yellow-400">SOMETHING</span><br><span class="text-white/20">CLEAR</span></h2><div class="mt-6 text-[16px] text-white/50 max-w-[440px] leading-relaxed"> architect, but I work remote too. If you're a homeowner, developer, or contractor tired of confusing plans — I make construction understandable with live 3D. Let's talk.</div><div class="mt-10 space-y-4"><div class="flex gap-4"><div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">📍</div><div><div class="font-bold text-[13px]"> am Main, Hesse</div><div class="text-[12px] text-white/40 font-mono">On-site + Remote • Germany wide</div></div></div><div class="flex gap-4"><div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">✉️</div><div><div class="font-bold text-[13px]"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b1d9d4dddddef1c5d9d4c7d4c3c59fd0c3d2d9d8">[email&#160;protected]</a></div><div class="text-[12px] text-white/40 font-mono">Response in 2h • AI assistant 24/7</div></div></div></div></div>
-<div class="bg-[#111] border border-white/10 rounded-[24px] p-7">
- <div class="font-mono text-[11px] tracking-widest text-white/40 mb-6">GET A QUOTE — AI ASSISTANT WILL QUALIFY YOU FIRST</div>
- <div class="grid gap-4">
-<div class="grid grid-cols-2 gap-4"><input placeholder="Your name" class="bg-black border border-white/10 rounded-xl px-4 py-3 text-[13px] focus:border-yellow-400 outline-none"><input placeholder="Email" class="bg-black border border-white/10 rounded-xl px-4 py-3 text-[13px] focus:border-yellow-400 outline-none"></div>
-<select class="bg-black border border-white/10 rounded-xl px-4 py-3 text-[13px] focus:border-yellow-400 outline-none"><option>Project type — Select</option><option>Single Family House</option><option>Renovation / Extension</option><option>Commercial / Office</option><option>Industrial / Warehouse</option><option>Just need 3D visualization</option></select>
-<textarea placeholder="Tell me about your project, budget, timeline... AI assistant will help you structure it." rows="4" class="bg-black border border-white/10 rounded-xl px-4 py-3 text-[13px] focus:border-yellow-400 outline-none"></textarea>
-<button class="py-4 bg-yellow-400 text-black rounded-full font-bold text-[12px] tracking-widest hover:bg-yellow-300">SEND → AI WILL REVIEW & BOOK CALL</button>
-<div class="text-[11px] font-mono text-white/30 text-center">AI assistant analyzes your project and suggests next step in 10s. No spam.</div>
- </div>
-</div>
- </div>
-</section>
+  <!-- ───────────────── Tab 3: Analysis ───────────────── -->
+  <section class="tab-panel" id="tab-analysis">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Digit Distribution</h2>
+        <span class="sub">Window: <select id="window-select">
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+        </select> ticks</span>
+        <span class="sub" id="even-odd-ratio">Even/Odd —</span>
+      </div>
+      <canvas class="bars-chart" id="digit-bars"></canvas>
+      <div class="bar-labels" id="bar-labels"></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>Over/Under Probabilities per Barrier</h2></div>
+        <div class="table-wrap"><table class="table" id="prob-table"></table></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Hot / Cold Digits</h2></div>
+        <div class="hotcold" id="hotcold"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Last-Digit Strip</h2><span class="sub" id="strip-info">—</span></div>
+        <div class="strip" id="digit-strip"></div>
+      </div>
+    </div>
+  </section>
 
-<footer class="border-t border-white/10 bg-[#070707] py-10">
- <div class="max-w-[1600px] mx-auto px-6 lg:px-10 flex flex-wrap justify-between gap-8 text-[11px] font-mono text-white/30"><div>© 2026 THE VERT — • • Live 3D Exploded Buildings & Equipment • Built with Three.js + AI</div><div class="flex gap-6"><span>Imprint</span><span>Privacy</span><span class="text-yellow-400">AI Assistant Online ●</span></div></div>
+  <!-- ───────────────── Tab 4: Entry Points ───────────────── -->
+  <section class="tab-panel" id="tab-entry">
+    <div class="panel">
+      <div class="panel-head"><h2>Signal Cards</h2></div>
+      <div class="cards" id="signal-cards"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Live Market Scan</h2></div>
+      <div class="scan-row">
+        <button class="btn-primary" id="scan-btn">Scan All Volatility Markets</button>
+        <label class="chk"><input type="checkbox" id="alert-sound" checked> Sound alert</label>
+        <span class="scan-result" id="scan-result"></span>
+      </div>
+      <div class="table-wrap"><table class="table" id="scan-table"></table></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  Trading involves risk. Signals and bots do not guarantee profit.
+  · Self-contained demo — register your app at <a href="https://api.deriv.com" target="_blank" rel="noopener">api.deriv.com</a>
 </footer>
 
-<!-- AI ASSISTANT WIDGET -->
-<div id="chatWidget" class="fixed bottom-6 right-6 z-50 w-[360px] max-w-[92vw] hidden">
- <div class="bg-[#111] border border-white/15 rounded-[20px] shadow-2xl overflow-hidden flex flex-col h-[520px]">
-<div class="p-4 bg-black border-b border-white/10 flex justify-between items-center">
- <div class="flex items-center gap-3"><div class="w-8 h-8 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold text-[14px]">V</div><div><div class="font-bold text-[13px] leading-none">THE VERT AI</div><div class="text-[10px] font-mono text-green-400">● Online • Answers in 2s • Architect Knowledge</div></div></div>
- <button onclick="document.getElementById('chatWidget').classList.add('hidden')" class="w-7 h-7 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20">✕</button>
-</div>
-<div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar bg-[#0a0a0a]">
- <div class="flex gap-2"><div class="w-7 h-7 bg-yellow-400 text-black rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0">V</div><div class="bg-white text-black rounded-2xl rounded-tl-sm px-4 py-3 text-[12px] leading-relaxed max-w-[80%]">Hi! I'm THE VERT AI — your construction guide. I'm an architect's assistant in . I can:<br><br>• Show you building samples in live 3D<br>• Explain equipment (scaffold, excavator, tools)<br>• Give you guides & cost estimates<br>• Qualify your project & book a call<br><br>What are you building?</div></div>
-</div>
-<div class="p-3 border-t border-white/10 bg-black">
- <div class="flex flex-wrap gap-1.5 mb-3">
-<button onclick="sendQuick('Show me building samples')" class="px-2.5 py-1 bg-white/10 hover:bg-white/15 rounded-full text-[10px] font-mono">🏠 Building samples</button>
-<button onclick="sendQuick('What equipment for foundation?')" class="px-2.5 py-1 bg-white/10 hover:bg-white/15 rounded-full text-[10px] font-mono">🚜 Equipment guide</button>
-<button onclick="sendQuick('How much does a house cost?')" class="px-2.5 py-1 bg-white/10 hover:bg-white/15 rounded-full text-[10px] font-mono">💰 Cost estimate</button>
-<button onclick="sendQuick('Explode the building live')" class="px-2.5 py-1 bg-yellow-400 text-black rounded-full text-[10px] font-mono font-bold">▶ Explode live</button>
- </div>
- <div class="flex gap-2"><input id="chatInput" placeholder="Ask about projects, costs, equipment..." class="flex-1 bg-[#111] border border-white/10 rounded-full px-4 py-2.5 text-[12px] focus:border-yellow-400 outline-none" onkeypress="if(event.key==='Enter') sendMessage()"><button onclick="sendMessage()" class="w-10 h-10 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold hover:bg-yellow-300">↑</button></div>
-</div>
- </div>
-</div>
+<script>
+/* ============================================================
+   DB TRADERS — Volatility Dashboard (styled after dbtraders.com)
+   Third-party Deriv trading site — vanilla JS, dark theme, compact
+   panels, tab navigation. Uses the official Deriv WebSocket API
+   (wss://ws.derivws.com/websockets/v3) for all live data & trades.
+   ============================================================ */
 
-<button id="chatFab" onclick="document.getElementById('chatWidget').classList.remove('hidden')" class="fixed bottom-6 right-6 z-40 w-14 h-14 bg-yellow-400 text-black rounded-full shadow-2xl flex items-center justify-center text-[22px] hover:bg-yellow-300 transition">
- <span>💬</span>
- <span class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-black rounded-full"></span>
-</button>
+// ─────────────────────────────────────────────────────────────────────────────
+// ── THE App ID — REGISTER YOUR APP HERE ────────────────────────────────────────
+// Open https://api.deriv.com and register an application (Application Manager).
+// Copy the "App ID" it gives you, replace the placeholder below, and host this
+// file (index.html) on any web host. OAuth requires the page URL registered in
+// the app settings on Deriv's side. See the comment block in <head> above.
+// ─────────────────────────────────────────────────────────────────────────────
+const APP_ID = 'YOUR_APP_ID'; // <<< paste your Deriv App ID here (from api.deriv.com)
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+const MAX_TICKS = 1000;
+const DIGIT_COLORS = ['#f87171','#fb923c','#fbbf24','#facc15','#a3e635','#4ade80','#34d399','#2dd4bf','#60a5fa','#8b5cf6'];
+const SIGNAL_WINDOW = 200;
 
-let scene,camera,renderer,controls,group,heroScene,heroCamera,heroRenderer,heroGroup,miniScene,miniCamera,miniRenderer,miniGroup;
-let parts=[],explodeFactor=0,preset='vertical',clock=new THREE.Clock(),heroClock=new THREE.Clock(),miniExplode=0.35,autoDir=1;
-
-const canvas=document.getElementById('canvas'),heroCanvas=document.getElementById('heroCanvas'),miniCanvas=document.getElementById('miniCanvas'),slider=document.getElementById('explodeSlider'),valueLabel=document.getElementById('explodeValue');
-
-function initMain(){
- scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0a0a); scene.fog=new THREE.Fog(0x0a0a0a,12,35);
- camera=new THREE.PerspectiveCamera(45,canvas.clientWidth/canvas.clientHeight,0.1,100); camera.position.set(3.2,2.2,4);
- renderer=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true}); renderer.setPixelRatio(window.devicePixelRatio); renderer.setSize(canvas.clientWidth,canvas.clientHeight); renderer.shadowMap.enabled=true; renderer.toneMapping=THREE.ACESFilmicToneMapping;
- controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=0.08;
- const amb=new THREE.AmbientLight(0xffffff,0.65); scene.add(amb); const d1=new THREE.DirectionalLight(0xffffff,2.2); d1.position.set(5,10,5); d1.castShadow=true; d1.shadow.mapSize.set(2048,2048); scene.add(d1); const d2=new THREE.DirectionalLight(0xffe7a0,1); d2.position.set(-4,3,-4); scene.add(d2);
- const gGeo=new THREE.PlaneGeometry(50,50); const gMat=new THREE.ShadowMaterial({opacity:0.18}); const ground=new THREE.Mesh(gGeo,gMat); ground.rotation.x=-Math.PI/2; ground.position.y=-1.3; ground.receiveShadow=true; scene.add(ground); const grid=new THREE.GridHelper(20,20,0x2a2a2a,0x1a1a1a); grid.position.y=-1.29; scene.add(grid);
- group=new THREE.Group(); scene.add(group);
- window.addEventListener('resize',()=>{ camera.aspect=canvas.clientWidth/canvas.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(canvas.clientWidth,canvas.clientHeight); });
-}
-function initHero(){
- heroScene=new THREE.Scene(); heroScene.background=new THREE.Color(0x070707);
- heroCamera=new THREE.PerspectiveCamera(50,heroCanvas.clientWidth/heroCanvas.clientHeight,0.1,100); heroCamera.position.set(0,1.2,4);
- heroRenderer=new THREE.WebGLRenderer({canvas:heroCanvas,antialias:true,alpha:true}); heroRenderer.setPixelRatio(window.devicePixelRatio); heroRenderer.setSize(heroCanvas.clientWidth,heroCanvas.clientHeight);
- heroGroup=new THREE.Group(); heroScene.add(heroGroup);
- const amb=new THREE.AmbientLight(0xffffff,0.7); heroScene.add(amb); const d=new THREE.DirectionalLight(0xffffff,1.8); d.position.set(3,5,2); heroScene.add(d);
- // house layers
- const mats=[new THREE.MeshStandardMaterial({color:0x3a3a3a}), new THREE.MeshStandardMaterial({color:0x555555}), new THREE.MeshStandardMaterial({color:0x8a6d3b}), new THREE.MeshStandardMaterial({color:0xfacc15}), new THREE.MeshStandardMaterial({color:0x222222})];
- const layers=[{h:0.15,w:2.2,d:1.6,y:-0.8,mat:0},{h:0.4,w:2,d:1.4,y:-0.4,mat:1},{h:0.6,w:1.9,d:1.3,y:0.1,mat:2},{h:0.15,w:2.1,d:1.5,y:0.55,mat:3},{h:0.5,w:0.2,d:1.2,y:0.1,mat:4}];
- layers.forEach((l,i)=>{ const geo=new THREE.BoxGeometry(l.w,l.h,l.d); const m=new THREE.Mesh(geo,mats[l.mat]); m.position.set(0,l.y,0); m.userData.orig=m.position.clone(); m.userData.dir=new THREE.Vector3(0,1,0); heroGroup.add(m); });
- window.addEventListener('resize',()=>{ heroCamera.aspect=heroCanvas.clientWidth/heroCanvas.clientHeight; heroCamera.updateProjectionMatrix(); heroRenderer.setSize(heroCanvas.clientWidth,heroCanvas.clientHeight); });
-}
-function initMini(){
- miniScene=new THREE.Scene(); miniScene.background=new THREE.Color(0x000000);
- miniCamera=new THREE.PerspectiveCamera(40,miniCanvas.clientWidth/miniCanvas.clientHeight,0.1,100); miniCamera.position.set(2,1.4,2.2);
- miniRenderer=new THREE.WebGLRenderer({canvas:miniCanvas,antialias:true}); miniRenderer.setPixelRatio(window.devicePixelRatio); miniRenderer.setSize(miniCanvas.clientWidth,miniCanvas.clientHeight);
- miniGroup=new THREE.Group(); miniScene.add(miniGroup);
- const amb=new THREE.AmbientLight(0xffffff,0.8); miniScene.add(amb); const d=new THREE.DirectionalLight(0xffffff,1.6); d.position.set(2,4,2); miniScene.add(d);
- const matY=new THREE.MeshStandardMaterial({color:0xfacc15}); const matG=new THREE.MeshStandardMaterial({color:0x333333});
- for(let i=0;i<6;i++){ const geo=new THREE.BoxGeometry(0.4,0.12,0.35); const m=new THREE.Mesh(geo,i===2?matY:matG); m.position.set(0,(i-2.5)*0.18,0); m.userData.orig=m.position.clone(); m.userData.dir=new THREE.Vector3(0,1,0); miniGroup.add(m); }
- window.addEventListener('resize',()=>{ miniCamera.aspect=miniCanvas.clientWidth/miniCanvas.clientHeight; miniCamera.updateProjectionMatrix(); miniRenderer.setSize(miniCanvas.clientWidth,miniCanvas.clientHeight); });
-}
-function clearGroup(){ parts.forEach(p=>{ if(p.trailLine) scene.remove(p.trailLine); }); parts=[]; while(group.children.length) group.remove(group.children[0]); }
-
-function createModel(type){
- clearGroup(); let meshes=[];
- const matConcrete=new THREE.MeshStandardMaterial({color:0x666666}), matWood=new THREE.MeshStandardMaterial({color:0x8B5A2B}), matInsul=new THREE.MeshStandardMaterial({color:0xF5E6A0}), matYellow=new THREE.MeshStandardMaterial({color:0xfacc15}), matBlack=new THREE.MeshStandardMaterial({color:0x1a1a1a}), matSteel=new THREE.MeshStandardMaterial({color:0x888888,metalness:0.8,roughness:0.2}), matGlass=new THREE.MeshStandardMaterial({color:0x88ccff,transparent:true,opacity:0.25});
- 
- if(type==='house'){
-const layers=[
- {geo:new THREE.BoxGeometry(2.4,0.25,1.8), pos:[0,-1.2,0], mat:matConcrete, name:'01 Foundation Slab — 25cm Concrete'},
- {geo:new THREE.BoxGeometry(2.2,0.35,1.6), pos:[0,-0.9,0], mat:new THREE.MeshStandardMaterial({color:0x444444}), name:'02 Perimeter Insulation — 12cm XPS'},
- {geo:new THREE.BoxGeometry(2.0,0.6,1.4), pos:[0,-0.5,0], mat:matConcrete, name:'03 Ground Floor Walls — 24cm Concrete'},
- {geo:new THREE.BoxGeometry(1.9,0.15,1.3), pos:[0,-0.15,0], mat:matInsul, name:'04 Insulation — 16cm Mineral Wool'},
- {geo:new THREE.BoxGeometry(1.8,0.6,1.2), pos:[0,0.25,0], mat:matWood, name:'05 Timber Frame Upper Floor'},
- {geo:new THREE.BoxGeometry(0.15,0.6,1.2), pos:[0.8,0.25,0], mat:matBlack, name:'06 Window Frame — Triple Glazed'},
- {geo:new THREE.BoxGeometry(1.7,0.12,1.1), pos:[0,0.6,0], mat:matWood, name:'07 Ceiling / Floor Slab'},
- {geo:new THREE.BoxGeometry(1.6,0.2,1.0), pos:[0,0.85,0], mat:matInsul, name:'08 Roof Insulation — 24cm'},
- {geo:new THREE.BoxGeometry(2.0,0.08,1.4), pos:[0,1.05,0], mat:matYellow, name:'09 Roof — Zinc Standing Seam'},
- {geo:new THREE.CylinderGeometry(0.04,0.04,0.5,8), pos:[0.9,0.9,0.3], mat:matSteel, name:'10 Gutter & Downpipe'},
- {geo:new THREE.BoxGeometry(0.4,0.05,0.8), pos:[-0.7,-0.5,0.7], mat:matBlack, name:'11 Scaffold Plank (Temp)'},
- {geo:new THREE.BoxGeometry(0.05,1.2,0.05), pos:[-0.9,-0.2,0.7], mat:matSteel, name:'12 Scaffold Frame'},
+const FALLBACK_MARKETS = [
+  { symbol: 'R_10',  label: 'Volatility 10 (R_10)' },
+  { symbol: 'R_25',  label: 'Volatility 25 (R_25)' },
+  { symbol: 'R_50',  label: 'Volatility 50 (R_50)' },
+  { symbol: 'R_75',  label: 'Volatility 75 (R_75)' },
+  { symbol: 'R_100', label: 'Volatility 100 (R_100)' },
+  { symbol: 'V10',   label: 'Volatility 10 Old (V10)' },
+  { symbol: 'V25',   label: 'Volatility 25 Old (V25)' },
+  { symbol: 'V50',   label: 'Volatility 50 Old (V50)' },
+  { symbol: 'V75',   label: 'Volatility 75 Old (V75)' },
+  { symbol: 'V100',  label: 'Volatility 100 Old (V100)' },
 ];
-layers.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); m.castShadow=true; m.receiveShadow=true; m.userData.name=c.name; meshes.push(m); });
- } else if(type==='commercial'){
-const cfgs=[
- {geo:new THREE.BoxGeometry(2.2,0.2,1.4), pos:[0,-1,0], mat:matConcrete, name:'Foundation'},
- {geo:new THREE.BoxGeometry(0.15,1.2,0.15), pos:[-0.9,0,0.6], mat:matSteel, name:'Steel Column HEB 300'},
- {geo:new THREE.BoxGeometry(0.15,1.2,0.15), pos:[0.9,0,0.6], mat:matSteel, name:'Steel Column HEB 300'},
- {geo:new THREE.BoxGeometry(0.15,1.2,0.15), pos:[-0.9,0,-0.6], mat:matSteel, name:'Steel Column HEB 300'},
- {geo:new THREE.BoxGeometry(0.15,1.2,0.15), pos:[0.9,0,-0.6], mat:matSteel, name:'Steel Column HEB 300'},
- {geo:new THREE.BoxGeometry(2.0,0.15,1.2), pos:[0,0.6,0], mat:matSteel, name:'Steel Beam IPE 400'},
- {geo:new THREE.BoxGeometry(1.8,0.05,1.0), pos:[0,0,0], mat:matConcrete, name:'Concrete Slab'},
- {geo:new THREE.BoxGeometry(1.9,0.8,0.05), pos:[0,0.2,0.7], mat:matGlass, name:'Facade Glazing — Triple'},
+
+// Entry-point signal definitions (digit contracts on Volatility indices).
+const SIGNAL_DEFS = [
+  { id: 'over2',  type: 'OVER',   barrier: 2, expect: 0.70, cond: (d) => d > 2, title: 'Over 2',  desc: 'Buy when the last digit is greater than 2.' },
+  { id: 'over3',  type: 'OVER',   barrier: 3, expect: 0.60, cond: (d) => d > 3, title: 'Over 3',  desc: 'Buy when the last digit is greater than 3.' },
+  { id: 'over4',  type: 'OVER',   barrier: 4, expect: 0.50, cond: (d) => d > 4, title: 'Over 4',  desc: 'Buy when the last digit is greater than 4.' },
+  { id: 'under7', type: 'UNDER',  barrier: 7, expect: 0.70, cond: (d) => d < 7, title: 'Under 7', desc: 'Buy when the last digit is less than 7.' },
+  { id: 'under6', type: 'UNDER',  barrier: 6, expect: 0.60, cond: (d) => d < 6, title: 'Under 6', desc: 'Buy when the last digit is less than 6.' },
+  { id: 'under5', type: 'UNDER',  barrier: 5, expect: 0.50, cond: (d) => d < 5, title: 'Under 5', desc: 'Buy when the last digit is less than 5.' },
 ];
-cfgs.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); m.castShadow=true; meshes.push(m); m.userData.name=c.name; });
- } else if(type==='scaffold'){
-const matO=new THREE.MeshStandardMaterial({color:0xff6b00}); const matS=new THREE.MeshStandardMaterial({color:0x999999,metalness:0.9});
-const cfgs=[
- {geo:new THREE.BoxGeometry(0.05,1.5,0.05), pos:[-0.6,0,0.4], mat:matS, name:'01 Vertical Frame — 2m Galvanized'},
- {geo:new THREE.BoxGeometry(0.05,1.5,0.05), pos:[0.6,0,0.4], mat:matS, name:'02 Vertical Frame — 2m Galvanized'},
- {geo:new THREE.BoxGeometry(1.2,0.05,0.05), pos:[0,0.6,0.4], mat:matS, name:'03 Horizontal Ledger'},
- {geo:new THREE.BoxGeometry(1.2,0.05,0.4), pos:[0,0,0.4], mat:new THREE.MeshStandardMaterial({color:0x8B4513}), name:'04 Wooden Plank — 3m'},
- {geo:new THREE.TorusGeometry(0.18,0.05,8,16,Math.PI), pos:[0,0.6,0.4], mat:matO, name:'05 Scaffold Clamp — Forged Steel'},
- {geo:new THREE.CylinderGeometry(0.04,0.04,0.3,8), pos:[0.6,0.6,0.4], mat:matS, name:'06 Bolt M12'},
- {geo:new THREE.BoxGeometry(1.0,0.02,0.3), pos:[0,-0.6,0.4], mat:matS, name:'07 Base Plate'},
- {geo:new THREE.CylinderGeometry(0.02,0.02,0.8,6), pos:[-0.6,-0.2,0.2], mat:matS, name:'08 Diagonal Brace'},
- {geo:new THREE.BoxGeometry(0.02,1.0,0.02), pos:[0,0,0.6], mat:matS, name:'09 Guardrail'},
- {geo:new THREE.BoxGeometry(0.3,0.4,0.02), pos:[0,0.2,0.55], mat:matO, name:'10 Toe Board'},
-];
-cfgs.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); m.castShadow=true; m.userData.name=c.name; meshes.push(m); });
- } else if(type==='drill'){
-const matY=new THREE.MeshStandardMaterial({color:0xfacc15}), matB=new THREE.MeshStandardMaterial({color:0x1a1a1a}), matM=new THREE.MeshStandardMaterial({color:0xaaaaaa,metalness:0.8,roughness:0.2});
-const cfgs=[
- {geo:new THREE.CylinderGeometry(0.12,0.12,0.22,16), pos:[0,0,0.7], mat:matM, name:'Chuck — Keyless'},
- {geo:new THREE.CylinderGeometry(0.15,0.15,0.2,16), pos:[0,0,0.48], mat:matB, name:'Gearbox'},
- {geo:new THREE.BoxGeometry(0.32,0.4,0.5), pos:[0,0.08,0.08], mat:matY, name:'Motor Housing'},
- {geo:new THREE.CylinderGeometry(0.1,0.1,0.32,16), pos:[0,0,0.08], mat:matM, rot:[0,0,Math.PI/2], name:'Motor'},
- {geo:new THREE.BoxGeometry(0.24,0.64,0.28), pos:[0,-0.4,0], mat:matY, name:'Handle'},
- {geo:new THREE.BoxGeometry(0.2,0.28,0.12), pos:[0,-0.24,0.12], mat:matB, name:'Trigger'},
- {geo:new THREE.BoxGeometry(0.28,0.16,0.4), pos:[0,-0.76,0.04], mat:matB, name:'Battery 18V'},
- {geo:new THREE.CylinderGeometry(0.04,0.04,0.32,8), pos:[0.2,-0.48,0], mat:matB, name:'Aux Handle'},
-];
-cfgs.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); if(c.rot) m.rotation.set(...c.rot); m.castShadow=true; m.userData.name=c.name; meshes.push(m); });
- } else if(type==='excavator'){
-const matY=new THREE.MeshStandardMaterial({color:0xfacc15}), matB=new THREE.MeshStandardMaterial({color:0x222222}), matM=new THREE.MeshStandardMaterial({color:0x888888,metalness:0.8});
-const cfgs=[
- {geo:new THREE.BoxGeometry(0.5,0.16,1.0), pos:[0,-0.7,0], mat:matB, name:'Tracks — Rubber'},
- {geo:new THREE.CylinderGeometry(0.32,0.32,0.24,16), pos:[0,-0.44,0], mat:matB, name:'Slew Ring'},
- {geo:new THREE.BoxGeometry(0.64,0.4,0.72), pos:[0,0,0], mat:matY, name:'Upper Structure'},
- {geo:new THREE.BoxGeometry(0.4,0.48,0.4), pos:[0,0.24,0.16], mat:new THREE.MeshStandardMaterial({color:0x111111}), name:'Cabin'},
- {geo:new THREE.BoxGeometry(0.12,0.64,0.12), pos:[0,0.16,0.64], mat:matY, name:'Boom Base'},
- {geo:new THREE.BoxGeometry(0.1,0.1,0.96), pos:[0,0.48,1.2], mat:matY, rot:[0.5,0,0], name:'Boom'},
- {geo:new THREE.BoxGeometry(0.08,0.08,0.72), pos:[0,0.72,1.76], mat:matY, rot:[-0.3,0,0], name:'Stick'},
- {geo:new THREE.BoxGeometry(0.32,0.24,0.32), pos:[0,0.56,2.16], mat:matB, name:'Bucket 0.3m³'},
- {geo:new THREE.CylinderGeometry(0.04,0.04,0.48,8), pos:[0.16,0.4,0.88], mat:matM, name:'Hydraulic Cylinder'},
- {geo:new THREE.CylinderGeometry(0.032,0.032,0.4,8), pos:[0.12,0.64,1.52], mat:matM, name:'Hydraulic Cylinder 2'},
-];
-cfgs.forEach(c=>{ const m=new THREE.Mesh(c.geo,c.mat); m.position.set(...c.pos); if(c.rot) m.rotation.set(...c.rot); m.castShadow=true; m.userData.name=c.name; meshes.push(m); });
- } else if(type==='engine'){
-const matY=new THREE.MeshStandardMaterial({color:0xfacc15}), matI=new THREE.MeshStandardMaterial({color:0x444444}), matA=new THREE.MeshStandardMaterial({color:0xcccccc,metalness:0.7});
-for(let i=0;i<18;i++){ const geo=i%2===0?new THREE.BoxGeometry(0.18+Math.random()*0.12,0.12,0.16):new THREE.CylinderGeometry(0.06,0.06,0.16,10); const mat=i<2?matY:(i%3===0?matI:matA); const m=new THREE.Mesh(geo,mat); const ang=(i/18)*Math.PI*2; const r=0.24+i*0.032; m.position.set(Math.cos(ang)*r,(i-9)*0.1,Math.sin(ang)*r); m.rotation.set(Math.random()*0.4,Math.random()*0.4,0); m.castShadow=true; m.userData.name=`Engine Part ${i+1} — ${i<3?'Housing':'Piston/Gear'}`; meshes.push(m); }
- }
- meshes.forEach(m=> group.add(m)); setupParts(); updateStats(); updatePartList();
-}
-function setupParts(){
- const box=new THREE.Box3().setFromObject(group); const center=new THREE.Vector3(); box.getCenter(center);
- parts=[]; group.children.forEach(ch=>{ if(!ch.isMesh) return; const wc=new THREE.Vector3(); ch.getWorldPosition(wc); let dir=new THREE.Vector3().subVectors(wc,center); if(dir.length()<0.001) dir.set((Math.random()-0.5),(Math.random()-0.5),(Math.random()-0.5)); dir.normalize(); const orig=ch.position.clone(); const trailGeo=new THREE.BufferGeometry().setFromPoints([orig.clone(),orig.clone()]); const trailMat=new THREE.LineDashedMaterial({color:0xffffff,dashSize:0.05,gapSize:0.05,opacity:0.4,transparent:true}); const trail=new THREE.Line(trailGeo,trailMat); trail.computeLineDistances(); trail.visible=document.getElementById('toggleTrails').checked; scene.add(trail); parts.push({mesh:ch,originalPos:orig,direction:dir,trailLine:trail,randomOffset:new THREE.Vector3((Math.random()-0.5)*0.4,(Math.random()-0.5)*0.4,(Math.random()-0.5)*0.4)}); });
-}
-function applyExplosion(f){
- explodeFactor=f; const maxD=2.6;
- parts.forEach(p=>{
-if(preset==='vertical'){ const idx=parts.indexOf(p); const yOff=f*maxD*(idx*0.22+0.3); p.mesh.position.copy(p.originalPos).add(new THREE.Vector3((Math.random()-0.5)*0.15*f, yOff, (Math.random()-0.5)*0.15*f)); }
-else if(preset==='linear'){ const idx=parts.indexOf(p); p.mesh.position.copy(p.originalPos).add(new THREE.Vector3(f*maxD*idx*0.28,0,0)); }
-else if(preset==='radial'){ p.mesh.position.copy(p.originalPos).add(p.direction.clone().multiplyScalar(f*maxD)).add(p.randomOffset.clone().multiplyScalar(f)); }
-else { p.mesh.position.copy(p.originalPos).add(p.direction.clone().multiplyScalar(f*maxD*1.2)); }
-if(p.trailLine){ const pts=[p.originalPos.clone(), p.mesh.position.clone()]; p.trailLine.geometry.setFromPoints(pts); p.trailLine.computeLineDistances(); p.trailLine.visible=document.getElementById('toggleTrails').checked && f>0.05; }
- });
- valueLabel.textContent=Math.round(f*100)+'%'; document.getElementById('miniLabel').textContent=Math.round(f*100)+'% EXPLODED';
-}
-function updateStats(){ document.getElementById('statParts').textContent=parts.length; let tris=0; parts.forEach(p=>{ if(p.mesh.geometry){ const g=p.mesh.geometry; if(g.index) tris+=g.index.count/3; else tris+=g.attributes.position.count/3; } }); document.getElementById('statTris').textContent=(tris/1000).toFixed(1)+'k'; }
-function updatePartList(){ const list=document.getElementById('partList'); list.innerHTML=''; parts.forEach((p,i)=>{ const div=document.createElement('div'); div.className='flex gap-2 p-2 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer'; div.innerHTML=`<span class="text-yellow-400">${String(i+1).padStart(2,'0')}</span><span class="flex-1">${p.mesh.userData.name||'Part '+(i+1)}</span>`; div.onclick=()=>{ p.mesh.material.emissive=new THREE.Color(0x444400); setTimeout(()=>{ p.mesh.material.emissive=new THREE.Color(0x000000); },600); }; list.appendChild(div); }); }
 
-function animate(){ requestAnimationFrame(animate); const d=clock.getDelta(), hd=heroClock.getDelta(); if(controls) controls.update(); document.getElementById('statFps').textContent=Math.round(1/d);
- miniExplode+=hd*0.22*autoDir; if(miniExplode>0.85){miniExplode=0.85; autoDir=-1;} if(miniExplode<0.15){miniExplode=0.15; autoDir=1;}
- heroGroup.children.forEach(m=>{ const off=new THREE.Vector3(0,miniExplode*0.9,0); if(m.userData.dir.y===0) off.copy(m.userData.dir).multiplyScalar(miniExplode*0.6); m.position.copy(m.userData.orig).add(off); }); heroGroup.rotation.y+=hd*0.15;
- miniGroup.children.forEach(m=>{ const off=new THREE.Vector3(0,miniExplode*0.7,0); m.position.copy(m.userData.orig).add(off); }); miniGroup.rotation.y+=hd*0.3;
- renderer.render(scene,camera); heroRenderer.render(heroScene,heroCamera); miniRenderer.render(miniScene,miniCamera);
+function defaultSignalRules() { return { minStreak: 3, useColdZone: true, coldWindow: 10 }; }
+
+/* ───────────────────────────── helpers ───────────────────────────── */
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function fmt(v, d = 2) {
+  if (v == null) return '—';
+  if (typeof v === 'number') return v.toFixed(d);
+  return String(v);
+}
+function parseNum(v, dflt = 0) {
+  const n = typeof v === 'number' ? v : parseFloat(v);
+  return Number.isFinite(n) ? n : dflt;
+}
+function numOf(obj, keys, dflt) {
+  if (!obj) return dflt;
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+  }
+  return dflt;
+}
+function shortId(id) {
+  const s = String(id ?? '');
+  return s.length > 10 ? s.slice(0, 6) + '…' + s.slice(-4) : s;
+}
+function fmtTime(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts * 1000);
+  const now = new Date();
+  return d.toDateString() === now.toDateString()
+    ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : d.toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+function pnlClass(row) {
+  const pl = numOf(row, ['pl', 'profit_loss', 'pnl', 'profit'], 0);
+  return pl > 0 ? 'pos' : (pl < 0 ? 'neg' : '');
+}
+function windowDigits(arr, n) { return arr.length > n ? arr.slice(-n) : arr; }
+function trailingCount(arr, pred) {
+  let n = 0;
+  for (let i = arr.length - 1; i >= 0; i--) { if (pred(arr[i].d)) n++; else break; }
+  return n;
+}
+function lastOccurrenceIndex(arr, pred) {
+  for (let i = arr.length - 1; i >= 0; i--) if (pred(arr[i].d)) return i;
+  return -1;
 }
 
-// UI Events
-document.querySelectorAll('.model-btn').forEach(b=>{ b.addEventListener('click',()=>{ document.querySelectorAll('.model-btn').forEach(x=> x.className='model-btn text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10'); b.className='model-btn active text-left p-3 rounded-xl bg-yellow-400 text-black'; createModel(b.dataset.model); slider.value=0; applyExplosion(0); }); });
-slider.addEventListener('input',e=> applyExplosion(e.target.value/100));
-document.getElementById('btnExplode').addEventListener('click',()=>{ let s=explodeFactor*100,t=100,st=performance.now(),d=1100; function a(ti){ let p=Math.min((ti-st)/d,1),e=1-Math.pow(1-p,3),v=s+(t-s)*e; slider.value=v; applyExplosion(v/100); if(p<1) requestAnimationFrame(a);} requestAnimationFrame(a); });
-document.getElementById('btnImplode').addEventListener('click',()=>{ let s=explodeFactor*100,t=0,st=performance.now(),d=700; function a(ti){ let p=Math.min((ti-st)/d,1),e=1-Math.pow(1-p,3),v=s+(t-s)*e; slider.value=v; applyExplosion(v/100); if(p<1) requestAnimationFrame(a);} requestAnimationFrame(a); });
-let animInt=null,isAnim=false; document.getElementById('btnAnimate').addEventListener('click',function(){ isAnim=!isAnim; this.textContent=isAnim?'⏸':'▶'; if(isAnim){ let dir=1; animInt=setInterval(()=>{ let v=parseFloat(slider.value)+dir*0.9; if(v>=100){v=100; dir=-1;} if(v<=0){v=0; dir=1;} slider.value=v; applyExplosion(v/100); },16);} else clearInterval(animInt); });
-document.querySelectorAll('.preset-btn').forEach(b=>{ b.addEventListener('click',()=>{ document.querySelectorAll('.preset-btn').forEach(x=> x.className='preset-btn py-2 bg-white/10 rounded-lg text-[11px] font-mono'); b.className='preset-btn py-2 bg-yellow-400 text-black rounded-lg text-[11px] font-mono font-bold'; preset=b.dataset.preset; applyExplosion(explodeFactor); }); });
-document.getElementById('toggleTrails').addEventListener('change',e=>{ parts.forEach(p=>{ if(p.trailLine) p.trailLine.visible=e.target.checked && explodeFactor>0.05; }); });
-document.getElementById('toggleXray').addEventListener('change',e=>{ parts.forEach(p=>{ p.mesh.material.transparent=e.target.checked; p.mesh.material.opacity=e.target.checked?0.35:1; }); });
+/* ─────────────────────── tick helpers (Deriv shapes) ───────────────────────
+   Verified shapes from the Deriv v3 docs/SDKs:
+   - tick stream:        { tick: { symbol, epoch, quote, ask, bid, pip_size } }
+   - ticks_history:      { history: { times: [...], prices: [...] } }
+   - authorize:          { authorize: {...} }
+   - proposal:           { proposal: { id, symbol, contract_type, payout, ... } }
+   - buy:                { buy: { contract_id, ... } }
+   Deriv defines the "last digit" of a Volatility-index tick as the units
+   digit of the quoted price: Math.floor(price) % 10.
+*/
+function tickPrice(t) {
+  if (t == null) return null;
+  if (typeof t === 'number') return t;
+  if (Array.isArray(t)) return tickPrice(t[1]);
+  if (typeof t === 'object') {
+    for (const k of ['quote', 'ask', 'bid', 'close', 'last', 'value', 'price', 'spot']) {
+      const v = t[k];
+      if (typeof v === 'number' && Number.isFinite(v)) return v;
+    }
+  }
+  return null;
+}
+function tickTime(t) {
+  if (t == null) return null;
+  if (typeof t === 'number') return t;
+  if (typeof t === 'object') {
+    for (const k of ['epoch', 'time', 'timeStamp', 'ts', 'time_stamp']) {
+      const v = t[k];
+      if (typeof v === 'number' && Number.isFinite(v)) return v;
+    }
+  }
+  return null;
+}
+function digitOfPrice(p) { return p == null ? null : Math.floor(Math.abs(p)) % 10; }
 
-// File upload
-const loader=new THREE.GLTFLoader(); 
-import('three/addons/loaders/DRACOLoader.js').then(mod=>{ const dr=new mod.DRACOLoader(); dr.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/'); loader.setDRACOLoader(dr); });
-function handleFile(f){ const url=URL.createObjectURL(f); loader.loadAsync(url).then(gltf=>{ clearGroup(); gltf.scene.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; c.material=c.material.clone(); }}); const box=new THREE.Box3().setFromObject(gltf.scene); const sz=new THREE.Vector3(); box.getSize(sz); const max=Math.max(sz.x,sz.y,sz.z); const sc=2.2/max; gltf.scene.scale.setScalar(sc); const ctr=new THREE.Vector3(); box.getCenter(ctr); gltf.scene.position.sub(ctr.multiplyScalar(sc)); const temp=[]; gltf.scene.traverse(o=>{ if(o.isMesh) temp.push(o.clone()); }); if(temp.length<=1) group.add(gltf.scene); else temp.forEach(m=> group.add(m)); setupParts(); updateStats(); updatePartList(); slider.value=0; applyExplosion(0); addBotMessage(`Loaded ${f.name} — ${parts.length} parts. Drag slider to explode!`); }).catch(err=> alert('Failed: '+err.message)); }
-document.getElementById('fileInput').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) handleFile(f); });
-document.getElementById('exportPng').addEventListener('click',()=>{ const url=renderer.domElement.toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download=`the-vert-${Date.now()}.png`; a.click(); });
-document.getElementById('exportGlb').addEventListener('click',()=>{ const exp=new THREE.GLTFExporter(); exp.parse(group,gltf=>{ const blob=new Blob([gltf],{type:'model/gltf-binary'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`the-vert-${Date.now()}.glb`; a.click(); addBotMessage(`Exported GLB ${(blob.size/1024/1024).toFixed(2)} MB — Ready to send to client! Share link, they open on phone with AR.`); },()=>{}, {binary:true}); });
-
-// AI Assistant Logic
-const chatMessages=document.getElementById('chatMessages');
-const chatInput=document.getElementById('chatInput');
-
-function addUserMessage(text){ const div=document.createElement('div'); div.className='flex gap-2 justify-end'; div.innerHTML=`<div class="bg-yellow-400 text-black rounded-2xl rounded-tr-sm px-4 py-2.5 text-[12px] max-w-[80%]">${text}</div>`; chatMessages.appendChild(div); chatMessages.scrollTop=chatMessages.scrollHeight; }
-function addBotMessage(text){ const div=document.createElement('div'); div.className='flex gap-2'; div.innerHTML=`<div class="w-7 h-7 bg-yellow-400 text-black rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0">V</div><div class="bg-white text-black rounded-2xl rounded-tl-sm px-4 py-3 text-[12px] leading-relaxed max-w-[80%]">${text}</div>`; chatMessages.appendChild(div); chatMessages.scrollTop=chatMessages.scrollHeight; }
-
-function getAIResponse(msg){
- const m=msg.toLowerCase();
- if(m.includes('building')||m.includes('sample')||m.includes('project')||m.includes('house')||m.includes('work')){
-return `Here are my top building samples — all live 3D exploded:<br><br>🏠 <b>EFH </b> — 120m² timber frame, 12 layers exploded. Client approved in 1 meeting.<br>🏢 <b>Studio Loft </b> — Steel + glass, scaffold system shown as assembly guide.<br>🏗️ <b>Warehouse </b> — 1200m² with equipment (crane, compressor).<br><br>Want me to explode one live? Type "explode house" or click LAB above.`;
- }
- if(m.includes('equipment')||m.includes('scaffold')||m.includes('excavator')||m.includes('tool')||m.includes('product')){
-return `I explain all site equipment in live 3D:<br><br>🏗️ <b>Scaffold</b> — Clamp, frame, plank, safety. Guide: which system for facade, cost per m².<br>🚜 <b>Excavator</b> — 0.8t mini to 20t CAT, hydraulic, GPS grade. What you need for foundation.<br>🔧 <b>Power Tools</b> — Drill, jackhammer, compressor exploded to motor & gearbox.<br><br>Say "explode scaffold" and I'll show it in the LAB live.`;
- }
- if(m.includes('cost')||m.includes('price')||m.includes('budget')||m.includes('how much')){
-return `Quick cost guide ( 2026):<br><br>• Single family 120m²: €280k-€420k (depending on timber vs concrete)<br>• Scaffold facade 100m²: €800-€1500 / month<br>• Foundation slab: €80-€120 / m²<br>• My 3D visualization + exploded guide: from €450 per project<br><br>For exact quote, tell me: project type, size, timeline? I'll qualify you and book a call.`;
- }
- if(m.includes('guide')||m.includes('foundation')||m.includes('learn')){
-return `My client-winning guides (free PDF + live 3D link):<br><br>01 <b>Foundation Types for Soil</b> — slab vs strip vs pile, exploded 3D<br>02 <b>Scaffold Cost Calculator</b> — interactive 3D configurator<br>03 <b>How to Read Exploded Drawings</b> — client guide, 2.4k views<br><br>These rank on Google and capture leads while you sleep. Want the free Foundation Guide?`;
- }
- if(m.includes('explode')||m.includes('3d')||m.includes('live')||m.includes('lab')){
-setTimeout(()=>{ scrollToLab('house'); }, 500);
-return `Exploding live now in THE VERT LAB! 👇<br><br>I'm switching to the house layers — 12 layers from foundation to roof. Drag the slider to 80% to see every bolt. This is what you send to clients — they explode it themselves on phone and say YES faster.<br><br>Try vertical mode — best for buildings.`;
- }
- if(m.includes('architect')||m.includes('who are you')||m.includes('the vert')){
-return `THE VERT is my architect studio in . I make construction crystal clear with live 3D exploded views.<br><br>Problem: Clients can't read 2D plans → delays, no trust.<br>Solution: I show every building as live 3D — every layer, product, equipment. Client explodes it on phone, understands, approves in 2.1s average.<br><br>I also have guides, equipment explainers, and this AI assistant that works 24/7 to qualify leads.`;
- }
- if(m.includes('contact')||m.includes('hire')||m.includes('quote')||m.includes('book')){
-return `Let's get you a quote! Quick qualification:<br><br>1️⃣ Project type? (house, renovation, commercial, industrial)<br>2️⃣ Size in m²?<br>3️⃣ Timeline?<br>4️⃣ Budget range?<br><br>Reply with that and I'll structure it and book a call. Or use the form below — I respond in 2h, AI works 24/7.`;
- }
- return `Got it! I can help with:<br><br>• 🏠 <b>Building samples</b> — "show me houses"<br>• 🚜 <b>Equipment</b> — "scaffold guide" or "excavator"<br>• 💰 <b>Costs</b> — "how much house"<br>• 📚 <b>Guides</b> — "foundation guide"<br>• ▶️ <b>Live 3D</b> — "explode building"<br><br>What are you building in ?`;
+function normTicks(msg) {
+  const out = [];
+  const push = (ts, p) => {
+    if (ts != null && p != null && Number.isFinite(p)) out.push({ t: ts, p, d: digitOfPrice(p) });
+  };
+  const h = msg && (msg.history || msg.ticks_history || msg);
+  if (Array.isArray(h.list)) {
+    for (const t of h.list) push(tickTime(Array.isArray(t) ? { epoch: t[0] } : t), tickPrice(Array.isArray(t) ? { quote: t[1], ask: t[1], bid: t[1] } : t));
+  } else if (Array.isArray(h.prices) || Array.isArray(h.times)) {
+    const times = Array.isArray(h.times) ? h.times : [];
+    const prices = Array.isArray(h.prices) ? h.prices : [];
+    for (let i = 0; i < Math.max(times.length, prices.length); i++) push(times[i], prices[i]);
+  } else if (Array.isArray(h.ticks)) {
+    for (const t of h.ticks) { push(tickTime(t), tickPrice(t)); }
+  } else if (Array.isArray(h.entries)) {
+    for (const e of h.entries) push(tickTime(e), tickPrice(e));
+  }
+  return out;
 }
 
-window.sendMessage=function(){
- const text=chatInput.value.trim(); if(!text) return;
- addUserMessage(text); chatInput.value='';
- setTimeout(()=>{ const resp=getAIResponse(text); addBotMessage(resp);
-// Trigger actions
-const low=text.toLowerCase();
-if(low.includes('explode house')||low.includes('house')){ createModel('house'); slider.value=0; applyExplosion(0); setTimeout(()=>{ document.getElementById('btnExplode').click(); },300); }
-else if(low.includes('scaffold')){ createModel('scaffold'); slider.value=0; applyExplosion(0); setTimeout(()=>{ document.getElementById('btnExplode').click(); },300); }
-else if(low.includes('excavator')){ createModel('excavator'); slider.value=0; applyExplosion(0); setTimeout(()=>{ document.getElementById('btnExplode').click(); },300); }
-else if(low.includes('commercial')||low.includes('studio')){ createModel('commercial'); slider.value=0; applyExplosion(0); }
- }, 600);
-}
-window.sendQuick=function(t){ chatInput.value=t; sendMessage(); }
-window.scrollToLab=function(model){
- document.getElementById('lab').scrollIntoView({behavior:'smooth'});
- if(model){ setTimeout(()=>{ createModel(model); slider.value=0; applyExplosion(0); document.getElementById('btnExplode').click(); }, 600); }
+function extractProposalId(p) {
+  if (!p) return null;
+  if (p.id != null) return p.id;
+  if (p.contract_id != null) return p.contract_id;
+  if (p.id_field != null) return p.id_field;
+  return null;
 }
 
-initMain(); initHero(); initMini(); createModel('house'); animate();
+function extractBalance(p) {
+  if (!p) return null;
+  if (typeof p.balance === 'number') return p.balance;
+  if (p.balance && typeof p.balance.balance === 'number') return p.balance.balance;
+  if (typeof p === 'number') return p;
+  const n = Number(p.balance ?? p.available ?? p.amount ?? p.available_balance);
+  return Number.isFinite(n) ? n : null;
+}
+
+function extractNum(obj, keys, dflt) {
+  if (!obj) return dflt;
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+  }
+  return dflt;
+}
+
+function readParam(name) {
+  const q = new URLSearchParams(location.search);
+  if (q.has(name)) return q.get(name);
+  const h = location.hash || '';
+  if (h) {
+    try {
+      const hp = new URLSearchParams(h.replace(/^#/, ''));
+      if (hp.has(name)) return hp.get(name);
+    } catch (e) { /* ignore */ }
+  }
+  return null;
+}
+function stripParams() {
+  try {
+    const u = new URL(location.href);
+    ['token1', 'acct1', 'access_token', 'state'].forEach((k) => u.searchParams.delete(k));
+    u.hash = '';
+    history.replaceState(null, '', u.pathname + u.search + u.hash);
+  } catch (e) { /* ignore */ }
+}
+
+/* ───────────────────────────── Deriv WebSocket client ───────────────────── */
+class DerivWS {
+  constructor() {
+    this.ws = null;
+    this.nextId = 1;
+    this.pending = new Map();
+    this.handlers = { tick: [], balance: [], authorize: [], close: [], error: [], proposal: [], buy: [], openContract: [], openPositions: [], profitTable: [], symbolInfo: [], ticksHistory: [] };
+    this.pingTimer = null;
+    this.retryMs = 1000;
+    this.url = `wss://ws.derivws.com/websockets/v3?app_id=${encodeURIComponent(APP_ID)}`;
+  }
+  on(type, fn) { (this.handlers[type] = this.handlers[type] || []).push(fn); }
+  emit(type, ...args) { (this.handlers[type] || []).forEach((fn) => fn(...args)); }
+
+  connect() {
+    if (this.ws) return;
+    let ws;
+    try { ws = new WebSocket(this.url); } catch (e) {
+      this.emit('error', new Error(`Could not open WebSocket: ${e.message}`));
+      return;
+    }
+    this.ws = ws;
+    ws.onopen = () => {
+      this.retryMs = 1000;
+      if (this.pingTimer) clearInterval(this.pingTimer);
+      // 30-second keep-alive ping via the Deriv API
+      this.pingTimer = setInterval(() => { try { this.send({ ping: 1 }); } catch (e) { /* closed */ } }, 30000);
+      updateConnectionStatus();
+    };
+    ws.onclose = () => {
+      if (this.pingTimer) { clearInterval(this.pingTimer); this.pingTimer = null; }
+      this.ws = null;
+      this.rejectPending(new Error('WebSocket closed — reconnecting'));
+      this.emit('close');
+      updateConnectionStatus();
+      const delay = Math.min(this.retryMs, 10000);
+      this.retryMs = Math.min(this.retryMs * 2, 10000);
+      setTimeout(() => this.connect(), delay);
+    };
+    ws.onerror = () => { /* onclose follows */ };
+    ws.onmessage = (ev) => this.handleMessage(ev.data);
+  }
+
+  send(payload) {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return null;
+    const id = this.nextId++;
+    ws.send(JSON.stringify(Object.assign({}, payload, { req_id: id })));
+    return id;
+  }
+
+  request(name, value) {
+    return new Promise((resolve, reject) => {
+      const id = this.send({ [name]: value });
+      if (id == null) { reject(new Error('WebSocket is not connected')); return; }
+      this.pending.set(id, { name, resolve, reject });
+    });
+  }
+  requestWith(payload) {
+    return new Promise((resolve, reject) => {
+      const id = this.send(payload);
+      if (id == null) { reject(new Error('WebSocket is not connected')); return; }
+      this.pending.set(id, { name: Object.keys(payload)[0], resolve, reject });
+    });
+  }
+  rejectPending(err) {
+    for (const p of this.pending.values()) p.reject(err);
+    this.pending.clear();
+  }
+
+  handleMessage(raw) {
+    let msg;
+    try { msg = JSON.parse(raw); } catch (e) { return; }
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.error && msg.error.message) {
+      const e = new Error(msg.error.message);
+      if (!this.resolvePendingByName(msg, null, e)) this.emit('error', e);
+      return;
+    }
+    if (msg.req_id != null && this.pending.has(msg.req_id)) {
+      const p = this.pending.get(msg.req_id);
+      this.pending.delete(msg.req_id);
+      p.resolve(msg);
+      return;
+    }
+    if (!this.resolvePendingByName(msg, null, null)) {
+      const type = msg.msg_type || Object.keys(msg).find((k) => k !== 'req_id' && k !== 'echo_req');
+      this.emitStreamEvent(type, msg);
+    }
+  }
+  resolvePendingByName(msg, reqId, err) {
+    const names = new Set([msg.msg_type].concat(Object.keys(msg)).filter(Boolean));
+    for (const [id, p] of this.pending) {
+      if (!names.has(p.name)) continue;
+      this.pending.delete(id);
+      if (err) p.reject(err); else p.resolve(msg);
+      return true;
+    }
+    return false;
+  }
+  emitStreamEvent(type, msg) {
+    switch (type) {
+      case 'tick': this.emit('tick', msg.tick); break;
+      case 'history': this.emit('ticksHistory', msg); break;
+      case 'authorize': this.emit('authorize', msg.authorize); break;
+      case 'balance': this.emit('balance', msg.balance); break;
+      case 'proposal': this.emit('proposal', msg.proposal); break;
+      case 'buy': this.emit('buy', msg.buy); break;
+      case 'proposal_open_contract': this.emit('openContract', msg.proposal_open_contract); break;
+      case 'open_positions': this.emit('openPositions', msg.open_positions); break;
+      case 'profit_table': this.emit('profitTable', msg.profit_table); break;
+      case 'active_symbols': this.emit('symbolInfo', msg.active_symbols); break;
+      default: break;
+    }
+  }
+}
+
+const client = new DerivWS();
+
+/* ───────────────────────────── app state ───────────────────────────── */
+const app = {
+  symbol: 'R_100',
+  markets: FALLBACK_MARKETS,
+  digitsBySymbol: {},
+  digits: [],
+  ticksSubs: {},
+  openContracts: new Map(),
+  recentTrades: [],
+  seenProfitTx: new Set(),
+  signalRules: {},
+  activeTab: 'manual',
+  connected: false,
+  account: { id: '', type: '', isDemo: false },
+  balance: null,
+  currency: 'USD',
+  lowBalanceWarned: false,
+  balanceTimer: null,
+  balanceFeed: false,
+  alertSoundEnabled: false,
+  windowSize: 100,
+  lastRender: { analysis: 0, entry: 0 },
+};
+
+const MANUAL = {
+  contractType: $('#contract-type'),
+  barrier: $('#contract-barrier'),
+  stake: $('#stake'),
+  duration: $('#duration'),
+  unit: $('#duration-unit'),
+};
+
+/* ───────────────────────────── UI helpers ───────────────────────────── */
+function showToast(type, msg) {
+  const el = document.getElementById('toasts');
+  if (!el) return;
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  el.appendChild(t);
+  const items = $$('.toast', el);
+  while (items.length > 5) { const old = items.shift(); if (old) old.remove(); }
+  setTimeout(() => t.classList.add('toast-out'), 4300);
+  setTimeout(() => t.remove(), 5000);
+}
+
+function playAlert() {
+  try {
+    const ctx = new AudioContext();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g).connect(ctx.destination);
+    o.type = 'sine'; o.frequency.value = 880;
+    g.gain.exponentialRampToValueAtTime(0.02, ctx.currentTime + 0.01);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.15);
+  } catch (e) { /* no audio */ }
+}
+
+function updateConnectionStatus() {
+  const el = $('#conn-status');
+  if (!el) return;
+  const connected = !!client.ws && client.ws.readyState === WebSocket.OPEN;
+  el.textContent = connected ? 'Live' : (client.ws ? 'Reconnecting…' : 'Connecting…');
+  el.className = 'conn-status' + (connected ? ' ok' : '');
+}
+
+/* ───────────────────────────── login ───────────────────────────── */
+function login() {
+  const redirect = `${location.origin}${location.pathname}`;
+  const url = `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(APP_ID)}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token`;
+  location.href = url;
+}
+function checkAutoLogin() {
+  const token = readParam('token1') || readParam('access_token');
+  if (!token) return;
+  const acct = readParam('acct1');
+  if (acct) { app.account.id = acct; updateHeader(); }
+  stripParams();
+  showToast('info', 'Logging in with Deriv…');
+  client.request('authorize', token)
+    .then((msg) => onAuthorize(msg && msg.authorize ? msg.authorize : msg))
+    .catch((e) => showToast('error', `Login failed: ${e.message}`));
+}
+function logout() {
+  try { client.ws && client.ws.close(); } catch (e) { /* ignore */ }
+  app.connected = false;
+  app.account = { id: '', type: '', isDemo: false };
+  app.balance = null;
+  clearInterval(app.balanceTimer); app.balanceTimer = null; app.balanceFeed = false;
+  app.openContracts.clear();
+  app.activeBot && app.activeBot.stop('Bot stopped — logged out.');
+  stripParams();
+  showToast('info', 'Logged out.');
+  updateHeader();
+  updateConnectionStatus();
+}
+
+/* ───────────────────────────── header ───────────────────────────── */
+function updateHeader() {
+  const loggedIn = !!app.account.id;
+  $('#acct-id').textContent = loggedIn ? app.account.id : '—';
+  const badge = $('#acct-badge');
+  badge.textContent = loggedIn ? (app.account.isDemo ? 'Demo' : 'Real') : '';
+  badge.className = 'badge' + (loggedIn ? (app.account.isDemo ? ' demo' : ' real') : '');
+  $('#login-btn').style.display = loggedIn ? 'none' : '';
+  $('#logout').style.display = loggedIn ? '' : 'none';
+  const bal = app.balance;
+  $('#balance').textContent = loggedIn && bal != null ? `${app.currency} ${fmt(bal, 2)}` : '—';
+}
+
+/* ───────────────────────────── balance ───────────────────────────── */
+function onBalance(payload) {
+  if (!payload) return;
+  const v = extractBalance(payload);
+  if (v != null) {
+    app.balance = v;
+    app.currency = payload.currency || payload.balance && payload.balance.currency || app.currency;
+    updateHeader();
+    if (v <= 0 && !app.lowBalanceWarned) {
+      app.lowBalanceWarned = true;
+      showToast('error', `Low balance: ${fmt(v, 2)} — no contracts can be placed.`);
+    }
+  }
+  const id = payload.loginid || payload.account_id || (payload.balance && payload.balance.loginid);
+  if (id) { app.account.id = id; updateHeader(); }
+}
+function startBalanceFeed() {
+  if (app.balanceFeed) return;
+  app.balanceFeed = true;
+  const poll = () => { client.request('balance', '').then((msg) => onBalance(msg && (msg.balance || msg))).catch(() => {}); };
+  poll();
+  app.balanceTimer = setInterval(poll, 20000);
+}
+
+/* ───────────────────────────── tick stream ───────────────────────────── */
+function onTick(tick) {
+  const p = tickPrice(tick);
+  const t = tickTime(tick);
+  if (p == null || t == null) return;
+  const symbol = tick && tick.symbol ? tick.symbol : app.symbol;
+  const arr = app.digitsBySymbol[symbol] || [];
+  arr.push({ t, p, d: digitOfPrice(p) });
+  while (arr.length > MAX_TICKS) arr.shift();
+  app.digitsBySymbol[symbol] = arr;
+  if (symbol === app.symbol) {
+    app.digits = arr;
+    app.lastDigit = arr[arr.length - 1].d;
+    syncTickDisplay();
+    redrawChart();
+    if (app.activeTab === 'analysis' && Date.now() - app.lastRender.analysis >= 120) {
+      app.lastRender.analysis = Date.now();
+      renderAnalysis(); renderProbTable(); renderHotCold();
+    }
+    if (app.activeTab === 'entry' && Date.now() - app.lastRender.entry >= 300) {
+      app.lastRender.entry = Date.now();
+      renderEntryPoints();
+    }
+  }
+  app.activeBot && app.activeBot.onTick();
+}
+
+function historySymbol(msg) {
+  const echo = msg && msg.echo_req;
+  if (echo && echo.ticks_history) return String(echo.ticks_history);
+  return app.symbol;
+}
+function onTicksHistory(msg) {
+  // Deriv answers ticks_history via the `history` message type (see emitStreamEvent).
+  const arr = normTicks(msg);
+  if (!arr.length) return;
+  const sym = historySymbol(msg);
+  app.digitsBySymbol[sym] = arr.slice(-MAX_TICKS);
+  if (sym === app.symbol) {
+    app.digits = app.digitsBySymbol[sym];
+    syncTickDisplay();
+    redrawChart();
+    if (app.activeTab === 'analysis') { renderAnalysis(); renderProbTable(); renderHotCold(); }
+    if (app.activeTab === 'entry') renderEntryPoints();
+  }
+}
+function subscribeTicks(symbol) {
+  if (app.ticksSubs[symbol]) return;
+  app.ticksSubs[symbol] = true;
+  client.requestWith({ ticks_history: symbol, end: 'latest', count: MAX_TICKS, subscribe: 1, style: 'ticks' })
+    .catch((e) => showToast('error', `Could not load ticks for ${symbol}: ${e.message}`));
+}
+
+/* ───────────────────────────── markets ───────────────────────────── */
+function onSymbolInfo(payload) {
+  const list = Array.isArray(payload) ? payload : ((payload && payload.active_symbols) || []);
+  const vols = list.filter((s) => {
+    const sym = String(s && s.symbol || '');
+    const name = String((s && (s.name || s.description)) || '').toLowerCase();
+    return name.includes('volatility') || /^r_\d/.test(sym) || /^v\d+$/i.test(sym);
+  });
+  app.markets = vols.length ? vols.map((s) => ({ symbol: String(s.symbol), label: s.name || s.symbol, sub: s.description || '' })) : FALLBACK_MARKETS;
+  populateMarketSelect();
+  populateBotMarket();
+}
+function populateMarketSelect() {
+  const sel = $('#market-select');
+  sel.innerHTML = app.markets.map((m) => `<option value="${escapeHtml(m.symbol)}"${m.symbol === app.symbol ? ' selected' : ''}>${escapeHtml(m.label)}${m.sub ? ' — ' + escapeHtml(m.sub) : ''}</option>`).join('');
+  sel.value = app.markets.some((m) => m.symbol === app.symbol) ? app.symbol : app.markets[0].symbol;
+}
+function populateBotMarket() {
+  const sel = $('#bot-market');
+  const cur = sel.value || app.symbol;
+  sel.innerHTML = app.markets.map((m) => `<option value="${escapeHtml(m.symbol)}"${m.symbol === cur ? ' selected' : ''}>${escapeHtml(m.label)}</option>`).join('');
+  sel.value = app.markets.some((m) => m.symbol === cur) ? cur : app.markets[0].symbol;
+}
+
+/* ───────────────────────────── tabs ───────────────────────────── */
+function setTab(name) {
+  app.activeTab = name;
+  $$('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
+  $$('.tab-panel').forEach((p) => p.classList.toggle('active', p.id === `tab-${name}`));
+  if (name === 'manual') {
+    updateManualUI(); syncTickDisplay(); renderDigitStrip(); drawTickChart();
+    renderOpenTable(); renderRecentTrades();
+  }
+  if (name === 'analysis') { renderAnalysis(); renderProbTable(); renderHotCold(); }
+  if (name === 'entry') renderEntryPoints();
+  if (name === 'bots') renderBots();
+}
+
+/* ───────────────────────────── manual trade ───────────────────────────── */
+function getManualSettings() {
+  const type = MANUAL.contractType.value || 'OVER';
+  const unit = MANUAL.unit.value || 'ticks';
+  const durationUnit = unit === 'seconds' ? 's' : (unit === 'minutes' ? 'm' : 't');
+  const digitType = ['OVER', 'UNDER', 'MATCHES', 'DIFFERS'].includes(type);
+  return {
+    symbol: app.symbol,
+    type,
+    stake: parseNum(MANUAL.stake.value, 0.5),
+    duration: parseNum(MANUAL.duration.value, 5),
+    durationUnit,
+    barrier: digitType ? parseNum(MANUAL.barrier.value, 3) : undefined,
+  };
+}
+function updateManualUI() {
+  const type = MANUAL.contractType.value || 'OVER';
+  const show = ['OVER', 'UNDER', 'MATCHES', 'DIFFERS'].includes(type);
+  MANUAL.barrier.style.display = show ? '' : 'none';
+  if (show && !MANUAL.barrier.value) MANUAL.barrier.value = '3';
+  refreshPayoutPreview();
+}
+function proposalRequest(params) {
+  const req = {
+    proposal: 1,
+    amount: params.amount ?? 0,
+    basis: params.basis || 'payout',
+    contract_type: params.contract_type,
+    duration: params.duration,
+    duration_unit: params.duration_unit,
+    symbol: params.symbol,
+  };
+  if (params.barrier != null) req.barrier = String(params.barrier);
+  return req;
+}
+function applyProposal(p) {
+  if (!p) return;
+  app.lastProposal = p;
+  const s = getManualSettings();
+  const pay = extractNum(p, ['payout']);
+  const match = (!p.symbol || p.symbol === s.symbol) && (!p.contract_type || p.contract_type === s.type);
+  $('#payout-preview').textContent = pay != null
+    ? `Payout: ${fmt(pay, 2)}× of stake${match ? '' : ' (refresh to match settings)'}`
+    : 'Payout: waiting for proposal…';
+}
+function refreshPayoutPreview() {
+  clearTimeout(refreshPayoutPreview.timer);
+  refreshPayoutPreview.timer = setTimeout(() => {
+    const s = getManualSettings();
+    client.requestWith(proposalRequest({
+      symbol: s.symbol, contract_type: s.type, amount: s.stake,
+      duration: s.duration, duration_unit: s.durationUnit, barrier: s.barrier,
+    })).then((msg) => applyProposal(msg && msg.proposal ? msg.proposal : msg))
+      .catch((e) => { if (app.activeTab === 'manual') $('#payout-preview').textContent = `Payout: unavailable (${e.message})`; });
+  }, 120);
+}
+
+function syncTickDisplay() {
+  const last = app.digits[app.digits.length - 1];
+  $('#live-tick').textContent = last ? `${last.p.toFixed(2)} · digit ${last.d}` : '—';
+  if (!last) { $('#mt-price').textContent = '—'; $('#mt-digit').textContent = '?'; return; }
+  $('#mt-price').textContent = last.p.toFixed(2);
+  $('#mt-time').textContent = `${fmtTime(last.t)} · last digit ${last.d}`;
+  $('#mt-digit').textContent = String(last.d);
+  $('#mt-digit').style.background = DIGIT_COLORS[last.d];
+  $('#mt-symbol').textContent = app.symbol;
+}
+function renderDigitStrip() {
+  const last = app.digits[app.digits.length - 1];
+  $('#digit-strip').innerHTML = DIGIT_COLORS.map((c, i) =>
+    `<div class="strip-cell${last && last.d === i ? ' hot' : ''}" style="--cell-color:${c}"><span>${i}</span></div>`).join('');
+  $('#strip-info').textContent = last ? `Last digit: ${last.d}` : '—';
+}
+function evenOddStats() {
+  const arr = windowDigits(app.digits, app.windowSize);
+  if (!arr.length) return { even: 0, odd: 0, total: 0 };
+  const evens = arr.filter((x) => x.d % 2 === 0).length;
+  return { even: evens, odd: arr.length - evens, total: arr.length };
+}
+function drawTickChart() {
+  const canvas = $('#mt-chart');
+  const w = canvas.clientWidth || 400, h = canvas.clientHeight || 96;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, w) * dpr;
+  canvas.height = Math.max(1, h) * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const series = (app.digits || []).slice(-50).map((x) => x.p);
+  if (!series.length) {
+    ctx.fillStyle = '#4a5264';
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.fillText('No ticks yet…', 10, h / 2);
+    return;
+  }
+  const min = Math.min(...series), max = Math.max(...series);
+  const pad = 8;
+  const plot = { x0: pad, y0: pad, x1: w - pad, y1: h - pad };
+  const span = max - min || 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = plot.y0 + (plot.y1 - plot.y0) * i / 5;
+    ctx.strokeStyle = i % 2 ? '#1c1e27' : '#222430';
+    ctx.beginPath(); ctx.moveTo(plot.x0, y); ctx.lineTo(plot.x1, y); ctx.stroke();
+  }
+  ctx.beginPath();
+  series.forEach((p, idx) => {
+    const x = plot.x0 + (plot.x1 - plot.x0) * (idx / Math.max(1, series.length - 1));
+    const y = plot.y1 - ((p - min) / span) * (plot.y1 - plot.y0);
+    idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#ffb74d'; ctx.lineWidth = 2; ctx.stroke();
+  const last = series[series.length - 1];
+  ctx.fillStyle = '#ffb74d'; ctx.beginPath();
+  ctx.arc(plot.x0 + (plot.x1 - plot.x0), plot.y1 - ((last - min) / span) * (plot.y1 - plot.y0), 4, 0, Math.PI * 2);
+  ctx.fill();
+}
+function drawBarsChart() {
+  const canvas = $('#digit-bars');
+  const w = canvas.clientWidth || 700, h = Math.max(60, canvas.clientHeight || 132);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, w) * dpr; canvas.height = Math.max(1, h) * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const arr = windowDigits(app.digits, app.windowSize);
+  const n = Math.max(1, arr.length);
+  const counts = new Array(10).fill(0);
+  arr.forEach((x) => counts[x.d]++);
+  const maxPct = Math.max(1, ...counts.map((c) => (c / n) * 100));
+  const pad = 8, plotH = h - pad * 2;
+  const colW = (w - pad * 2) / 10;
+  ctx.font = '11px "SFMono-Regular", Menlo, monospace';
+  counts.forEach((c, i) => {
+    const pct = (c / n) * 100;
+    const barH = (pct / maxPct) * plotH;
+    const x = pad + i * colW + (colW - 7) / 2;
+    const y = h - pad - barH;
+    ctx.fillStyle = DIGIT_COLORS[i];
+    ctx.fillRect(x, y, 7, Math.max(1, barH));
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${pct.toFixed(0)}%`, x + 3.5, h - pad - barH - 4);
+    ctx.fillStyle = '#9aa0ad';
+    ctx.fillText(String(i), x + 3.5, h - 3);
+  });
+  $('#bar-labels').textContent = `Digit distribution — ${arr.length} ticks in window (max ${app.windowSize})`;
+}
+function renderOpenTable() {
+  const host = $('#open-contracts-panel');
+  const list = [...app.openContracts.values()];
+  $('#open-count').textContent = list.length ? `${list.length} open` : '0 open';
+  if (!list.length) { host.innerHTML = '<div class="empty">No open contracts.</div>'; return; }
+  host.innerHTML = `<div class="table-wrap"><table class="table"><thead><tr><th>Type</th><th>Symbol</th><th>Entry</th><th>Current</th><th>P/L</th><th></th></tr></thead><tbody>` +
+    list.map((c) => {
+      const id = c.contract_id ?? c.id;
+      return `<tr>
+        <td>${escapeHtml(c.contract_type || '—')}</td>
+        <td>${escapeHtml(String(c.symbol || app.symbol))}</td>
+        <td class="mono">${fmt(numOf(c, ['purchase_price', 'entry_spot', 'entry_tick', 'buy_price', 'spot'], '—'), 2)}</td>
+        <td class="mono">${fmt(numOf(c, ['current_spot', 'spot', 'last_spot', 'quote'], '—'), 2)}</td>
+        <td class="${pnlClass(c)}">${fmt(numOf(c, ['pnl', 'profit_loss', 'pl'], 0), 2)}</td>
+        <td><button class="btn-sm btn-danger" data-sell="${escapeHtml(String(id ?? ''))}">Sell</button></td>
+      </tr>`;
+    }).join('') +
+    `</tbody></table></div>`;
+  host.querySelectorAll('[data-sell]').forEach((b) => {
+    b.addEventListener('click', () => sellContract(b.dataset.sell));
+  });
+}
+function renderRecentTrades() {
+  const host = $('#recent-trades');
+  const rows = app.recentTrades.slice(0, 15);
+  if (!rows.length) { host.innerHTML = '<div class="empty">No recent trades yet.</div>'; return; }
+  host.innerHTML = `<div class="table-wrap"><table class="table"><thead><tr><th>ID</th><th>Type</th><th class="mono">Buy</th><th class="mono">Exit</th><th class="right">P/L</th><th>Time</th></tr></thead><tbody>` +
+    rows.map((r) => {
+      const exit = numOf(r, ['sell_price', 'exit_spot', 'close_price'], null);
+      const buy = numOf(r, ['buy_price', 'entry_spot', 'entry_tick'], null);
+      const pl = numOf(r, ['pl', 'profit_loss', 'pnl'], (exit != null && buy != null) ? exit - buy : null);
+      return `<tr>
+        <td class="mono">${escapeHtml(shortId(r.transaction_id ?? r.id ?? '—'))}</td>
+        <td>${escapeHtml(String(r.contract_type || '—'))}</td>
+        <td class="mono">${fmt(buy, 2)}</td>
+        <td class="mono">${fmt(exit, 2)}</td>
+        <td class="right ${pnlClass(r)}">${fmt(pl, 2)}</td>
+        <td class="mono">${escapeHtml(r.purchase_time ? fmtTime(r.purchase_time) : '—')}</td>
+      </tr>`;
+    }).join('') + `</tbody></table></div>`;
+}
+async function sellContract(id) {
+  if (!id) return;
+  try { await client.request('sell_all', id); }
+  catch (e1) {
+    try { await client.request('sell', id); } catch (e2) { showToast('error', `Sell failed: ${e2.message}`); return; }
+  }
+  showToast('info', `Sold contract ${shortId(id)}.`);
+}
+
+async function buyCurrent() {
+  if (!app.account.id) { showToast('warn', 'Log in first.'); return; }
+  const s = getManualSettings();
+  const amt = s.stake;
+  if (amt <= 0) { showToast('warn', 'Stake must be greater than 0.'); return; }
+  if (app.balance != null && amt > app.balance) showToast('warn', `Insufficient balance: ${fmt(app.balance, 2)}.`);
+  const params = {
+    symbol: s.symbol, contract_type: s.type, duration: s.duration,
+    duration_unit: s.durationUnit, barrier: s.barrier,
+  };
+  try {
+    const msg = await client.requestWith(proposalRequest(Object.assign({ amount: amt, currency: app.currency, basis: 'payout' }, params)));
+    const id = extractProposalId(msg && msg.proposal ? msg.proposal : msg);
+    try {
+      await client.request('buy', { buy: id, amount: amt, subscribe: 1 });
+    } catch (e) {
+      // Deriv does not accept unary proposal IDs as buy IDs — submit the
+      // contract parameters explicitly with the "buy 1" style buy request.
+      await client.request('buy', { buy: 1, subscribe: 1, amount: amt, parameters: Object.assign({ amount: amt, currency: app.currency, basis: 'stake' }, params) });
+    }
+    showToast('success', `Bought ${s.type} on ${s.symbol} — stake ${fmt(amt, 2)}.`);
+    if (app.activeTab === 'manual') renderOpenTable();
+  } catch (e) {
+    showToast('error', `Buy failed: ${e.message}`);
+  }
+}
+
+/* ───────────────────────────── authorize / market events ───────────────────────────── */
+function onAuthorize(data) {
+  app.connected = true;
+  app.account.isDemo = !!data.is_demo_login || (Array.isArray(data.account_list) && data.account_list.some((a) => a && a.is_demo_login));
+  app.account.id = app.account.id || data.account_id || data.loginid || data.id || '';
+  app.currency = data.currency || app.currency;
+  updateHeader();
+  showToast('success', `Logged in: ${app.account.id || 'account'}`);
+  startBalanceFeed();
+  client.request('active_symbols', 'brief').then((msg) => onSymbolInfo(msg && msg.active_symbols)).catch(() => {});
+  client.requestWith({ open_positions: '', subscribe: 1 }).then((msg) => {
+    const list = Array.isArray(msg.open_positions) ? msg.open_positions : [];
+    app.openContracts = new Map(list.map((c) => [String(c.contract_id ?? c.id), c]).filter(([, v]) => v));
+    renderOpenTable();
+  }).catch(() => {});
+  client.request('profit_table', 1).then((msg) => onProfitTable(msg && msg.profit_table)).catch(() => {});
+  subscribeTicks(app.symbol);
+  updateConnectionStatus();
+}
+
+function onProfitTable(payload) {
+  const rows = Array.isArray(payload) ? payload : ((payload && payload.transactions) || (payload && payload.list) || []);
+  const bot = app.activeBot;
+  (rows || []).forEach((row) => {
+    const txId = row && (row.transaction_id ?? row.transactionId ?? row.id);
+    const idStr = txId != null ? String(txId) : `${row && row.contract_id}_${row && row.pl}`;
+    if (bot && bot.running && idStr && !bot.seenTx.has(idStr)) {
+      bot.seenTx.add(idStr);
+      bot.closedRows.push(row);
+      bot.onProfitRow(row);
+    }
+    if (!app.seenProfitTx.has(idStr)) {
+      app.seenProfitTx.add(idStr);
+      app.recentTrades.unshift(row);
+      if (app.recentTrades.length > 15) app.recentTrades.pop();
+    }
+  });
+  if (bot && bot.running && app.activeTab === 'bots') renderBots();
+  if (app.activeTab === 'manual') renderRecentTrades();
+}
+
+function onOpenPositions(payload) {
+  const list = Array.isArray(payload) ? payload : ((payload && payload.open_positions) || []);
+  const next = new Map();
+  for (const c of list) {
+    const id = c && (c.contract_id ?? c.id);
+    if (id != null) next.set(String(id), c);
+  }
+  const bot = app.activeBot;
+  app.openContracts = next;
+  if (bot) bot.updateOpenMap(next);
+  if (bot && bot.running) bot.log('info', `Open contracts: ${next.size}`);
+  if (app.activeTab === 'manual') renderOpenTable();
+  if (bot && bot.running && app.activeTab === 'bots') renderBots();
+}
+
+function onOpenContract(c) {
+  if (!c) return;
+  const id = c.contract_id ?? c.id;
+  if (id != null) app.openContracts.set(String(id), c);
+  if (app.activeBot) app.activeBot.updateOpenMap(app.openContracts);
+}
+
+/* ───────────────────────────── analysis tab ───────────────────────────── */
+function renderAnalysis() {
+  drawBarsChart(); renderProbTable(); renderHotCold();
+  const { even, odd } = evenOddStats();
+  $('#even-odd-ratio').textContent = (even || odd) ? `Even ${even}% / Odd ${odd}%` : '—';
+}
+function renderProbTable() {
+  const arr = windowDigits(app.digits, app.windowSize);
+  const n = Math.max(1, arr.length);
+  const rows = [];
+  for (let b = 0; b <= 9; b++) {
+    const over = arr.filter((x) => x.d > b).length / n;
+    const under = arr.filter((x) => x.d < b).length / n;
+    const tie = arr.filter((x) => x.d === b).length / n;
+    rows.push(`<tr><td>${b}</td><td class="pct">${fmt(over * 100, 1)}%</td><td class="pct">${fmt(under * 100, 1)}%</td><td class="pct">${fmt(tie * 100, 1)}%</td></tr>`);
+  }
+  $('#prob-table').innerHTML = `<thead><tr><th class="mono">Barrier</th><th class="pct">P(Over)</th><th class="pct">P(Under)</th><th class="pct">P(Tie)</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+}
+function renderHotCold() {
+  const arr = windowDigits(app.digits, app.windowSize);
+  const n = Math.max(1, arr.length);
+  const freq = new Array(10).fill(0);
+  arr.forEach((x) => freq[x.d]++);
+  const cells = [];
+  for (let d = 0; d < 10; d++) {
+    const rate = freq[d] / n;
+    let cls = 'neutral';
+    if (rate > 0.13) cls = 'hot';
+    else if (rate < 0.07) cls = 'cold';
+    cells.push(`<div class="hotcold-cell ${cls}" title="Digit ${d}: ${(rate * 100).toFixed(1)}% of the window (${freq[d]}/${n})">${cls === 'hot' ? 'HOT' : cls === 'cold' ? 'COLD' : '·'}</div>`);
+  }
+  $('#hotcold').innerHTML = cells.join('');
+}
+
+/* ───────────────────────────── entry tab ───────────────────────────── */
+function evaluateSignal(def, digits, rules) {
+  const arr = digits.slice(-SIGNAL_WINDOW);
+  const n = arr.length;
+  if (!n) return { entryNow: false, hitRate: 0, trend: '—', strength: 'weak', lastDigit: null, streak: 0, score: 0 };
+  const cond = (d) => def.cond(d);
+  const hits = arr.filter((x) => cond(x.d));
+  const hitRate = hits.length / n;
+  const streak = trailingCount(arr, (d) => cond(d));
+  const lastD = arr[n - 1].d;
+  const q = Math.max(5, Math.floor(n / 4));
+  const rate = (a) => a.filter((x) => cond(x.d)).length / Math.max(1, a.length);
+  const recent = rate(arr.slice(-q));
+  const older = rate(arr.slice(Math.max(0, n - 2 * q), n - q));
+  let trend = '—';
+  if (recent > older + 0.02) trend = '↑';
+  else if (recent < older - 0.02) trend = '↓';
+  const diff = hitRate - def.expect;
+  let strength = 'weak';
+  if (Math.abs(diff) > 0.08) strength = 'strong';
+  else if (Math.abs(diff) > 0.04) strength = 'medium';
+  const lastOcc = lastOccurrenceIndex(arr, (d) => d === lastD);
+  const coldGap = lastOcc >= 0 ? (n - 1) - lastOcc : 999;
+  const entryNow = (streak >= rules.minStreak) || (rules.useColdZone && cond(lastD) && coldGap >= rules.coldWindow);
+  const score = hitRate * (strength === 'strong' ? 2 : strength === 'medium' ? 1.5 : 1);
+  return { entryNow, hitRate, trend, strength, lastDigit: lastD, streak, coldGap, score };
+}
+function signalCardHtml(def) {
+  const rules = app.signalRules[def.id] || (app.signalRules[def.id] = defaultSignalRules());
+  return `
+    <article class="signal-card" data-signal="${def.id}">
+      <div class="sc-head"><h3>${def.title}</h3><span class="sc-badge" data-role="badge">Wait</span></div>
+      <div class="sc-mid">
+        <span class="sc-hit" data-role="hit">—</span>
+        <span class="sc-trend" data-role="trend"></span>
+        <span class="sc-strength" data-role="strength"></span>
+        <span class="sc-streak" data-role="streak" style="color:var(--fg-faint);font-size:11px"></span>
+      </div>
+      <div class="sc-desc">${def.desc}</div>
+      <div class="sc-rules">
+        <label class="rule-lbl">Streak ≥ <input class="rule-input" type="number" min="1" max="40" value="${rules.minStreak}" data-rule="minStreak"></label>
+        <label class="chk"><input type="checkbox"${rules.useColdZone ? ' checked' : ''} data-rule="useColdZone"><span>Cold digit zone — digit absent for ≥</span><input class="rule-input" type="number" min="5" max="200" value="${rules.coldWindow}" data-rule="coldWindow"><span>ticks</span></label>
+      </div>
+      <div class="sc-actions"><button class="btn-sm trade-this">Trade this</button></div>
+    </article>`;
+}
+function syncSignalRules(def) {
+  const card = $(`.signal-card[data-signal="${def.id}"]`);
+  if (!card) return app.signalRules[def.id];
+  const rules = app.signalRules[def.id];
+  card.querySelectorAll('[data-rule]').forEach((el) => {
+    if (el.type === 'checkbox') rules[el.dataset.rule] = el.checked;
+    else rules[el.dataset.rule] = parseNum(el.value, rules[el.dataset.rule]);
+  });
+  return rules;
+}
+function refreshSignalCard(def) {
+  const card = $(`.signal-card[data-signal="${def.id}"]`);
+  if (!card) return;
+  const rules = syncSignalRules(def);
+  const sig = evaluateSignal(def, app.digits, rules);
+  const badge = card.querySelector('[data-role="badge"]');
+  badge.textContent = sig.entryNow ? 'Entry now' : 'Wait';
+  badge.className = 'sc-badge' + (sig.entryNow ? ' now' : '');
+  card.querySelector('[data-role="hit"]').textContent = sig.hitRate ? `${(sig.hitRate * 100).toFixed(1)}%` : '—';
+  card.querySelector('[data-role="trend"]').textContent = sig.trend;
+  const stEl = card.querySelector('[data-role="strength"]');
+  stEl.textContent = sig.strength === 'weak' ? 'weak' : sig.strength;
+  stEl.className = 'sc-strength ' + (sig.strength === 'weak' ? 'weak' : (sig.strength === 'strong' ? 'strong' : 'medium'));
+  card.querySelector('[data-role="streak"]').textContent = `streak ${sig.streak}`;
+  card.querySelector('.trade-this').addEventListener('click', () => onSignalTrade(def));
+  card.querySelectorAll('[data-rule]').forEach((el) => {
+    el.addEventListener('change', () => refreshSignalCard(def));
+  });
+}
+function onSignalTrade(def) {
+  setTab('manual');
+  MANUAL.contractType.value = def.type;
+  if (['OVER', 'UNDER', 'MATCHES', 'DIFFERS'].includes(def.type)) MANUAL.barrier.value = String(def.barrier);
+  updateManualUI();
+  $('#buy-btn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function renderEntryPoints() {
+  const host = $('#signal-cards');
+  host.innerHTML = SIGNAL_DEFS.map((def) => signalCardHtml(def)).join('');
+  SIGNAL_DEFS.forEach((def) => refreshSignalCard(def));
+}
+function runMarketScan() {
+  const rows = [];
+  for (const m of app.markets) {
+    const digits = app.digitsBySymbol[m.symbol] || [];
+    if (digits.length < 30) continue;
+    let best = null;
+    for (const def of SIGNAL_DEFS) {
+      const sig = evaluateSignal(def, digits, app.signalRules[def.id] || defaultSignalRules());
+      if (!best || sig.score > best.sig.score) best = { def, sig };
+    }
+    if (best) rows.push({ market: m, def: best.def, sig: best.sig });
+  }
+  rows.sort((a, b) => b.sig.score - a.sig.score);
+  if (app.alertSoundEnabled && rows.some((r) => r.sig.entryNow)) playAlert();
+  renderScanResults(rows);
+}
+function renderScanResults(rows) {
+  const table = $('#scan-table');
+  table.innerHTML = `<thead><tr><th>Market</th><th>Signal</th><th class="pct">Hit rate</th><th>Trend</th><th>Strength</th><th>Entry now</th><th></th></tr></thead><tbody>` +
+    rows.slice(0, 8).map((r) => `<tr>
+      <td>${escapeHtml(r.market.label)} (${r.market.symbol})</td>
+      <td>${r.def.title} (${r.def.type})</td>
+      <td class="pct">${r.sig.hitRate ? (r.sig.hitRate * 100).toFixed(1) + '%' : '—'}</td>
+      <td>${r.sig.trend}</td>
+      <td>${r.sig.strength}</td>
+      <td>${r.sig.entryNow ? '✔' : '—'}</td>
+      <td><button class="btn-sm trade-this" data-symbol="${escapeHtml(r.market.symbol)}" data-type="${r.def.type}">Trade</button></td>
+    </tr>`).join('') + `</tbody>`;
+  table.querySelectorAll('[data-symbol]').forEach((b) => {
+    b.addEventListener('click', () => {
+      setTab('manual');
+      MANUAL.contractType.value = b.dataset.type;
+      if (['OVER', 'UNDER', 'MATCHES', 'DIFFERS'].includes(b.dataset.type)) MANUAL.barrier.value = '3';
+      updateManualUI();
+      $('#buy-btn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+  $('#scan-result').textContent = rows.length ? `Ranked ${rows.length} Volatility markets by best signal.` : 'No markets with sufficient tick data yet.';
+}
+
+/* ───────────────────────────── bots tab ───────────────────────────── */
+function strategyParamsHtml(strategy) {
+  const grid = 'form-grid-2';
+  switch (strategy) {
+    case 'digit_streak':
+      return `<div class="panel"><div class="panel-head"><h2>Digit Streak — parameters</h2></div>
+        <div class="${grid}">
+          <label>After N consecutive digits <input id="s-after" type="number" min="1" max="20" value="3"></label>
+          <label>Direction <select id="s-dir"><option value="above">Above barrier → trade Over</option><option value="below">Below barrier → trade Under</option></select></label>
+        </div></div>`;
+    case 'digit_freq':
+      return `<div class="panel"><div class="panel-head"><h2>Digit Frequency Threshold — parameters</h2></div>
+        <div class="${grid}">
+          <label>Frequency threshold % <input id="s-freq-thr" type="number" min="1" max="100" value="12"></label>
+          <label>Window (ticks) <input id="s-freq-win" type="number" min="20" max="1000" value="200"></label>
+        </div></div>`;
+    case 'even_odd':
+      return `<div class="panel"><div class="panel-head"><h2>Even/Odd Imbalance — parameters</h2></div>
+        <div class="${grid}">
+          <label>Imbalance threshold % <input id="s-imbalance" type="number" min="1" max="100" value="25"></label>
+          <label class="full">Tested each tick while no contract is open.</label>
+        </div></div>`;
+    case 'martingale':
+      return `<div class="panel"><div class="panel-head"><h2>Martingale Recovery — parameters</h2></div>
+        <div class="${grid}">
+          <label>Multiplier <input id="s-mul" type="number" min="1.1" step="0.1" value="2"></label>
+          <label>Max steps <input id="s-steps" type="number" min="1" max="8" value="4"></label>
+          <label class="full"><label><input type="checkbox" id="s-reset" checked> Reset to base stake after a win</label></label>
+        </div></div>`;
+    default:
+      return '';
+  }
+}
+function getBotSettings() {
+  return {
+    strategy: $('#bot-strategy').value || 'digit_streak',
+    market: $('#bot-market').value || app.symbol,
+    contract: $('#bot-contract').value || 'OVER',
+    barrier: parseNum($('#bot-barrier').value, 3),
+    duration: parseNum($('#bot-duration').value, 5),
+    durationUnit: 't',
+    stake: parseNum($('#bot-stake').value, 0.5),
+    takeProfit: parseNum($('#bot-take-profit').value, 0),
+    stopLoss: parseNum($('#bot-stop-loss').value, 0),
+    maxConsecutiveLosses: parseNum($('#bot-max-losses').value, 5),
+    cooldown: parseNum($('#bot-cooldown').value, 30),
+    after: parseNum($('#s-after') ? $('#s-after').value : 3, 3),
+    direction: $('#s-dir') ? ($('#s-dir').value || 'above') : 'above',
+    freqThreshold: parseNum($('#s-freq-thr') ? $('#s-freq-thr').value : 12, 12),
+    freqWindow: parseNum($('#s-freq-win') ? $('#s-freq-win').value : 200, 200),
+    imbalance: parseNum($('#s-imbalance') ? $('#s-imbalance').value : 25, 25),
+    multiplier: parseNum($('#s-mul') ? $('#s-mul').value : 2, 2),
+    maxSteps: parseNum($('#s-steps') ? $('#s-steps').value : 4, 4),
+    resetAfterWin: $('#s-reset') ? $('#s-reset').checked : true,
+  };
+}
+function renderBots() {
+  const bot = app.activeBot;
+  if (!bot) return;
+  const s = bot.stats();
+  const pl = `${app.currency} ${fmt(s.pnl, 2)}`;
+  $('#bot-pl').textContent = pl;
+  $('#bot-wr').textContent = s.completed ? `${s.winRate.toFixed(0)}% (${s.wins}W / ${s.losses}L)` : '—';
+  $('#bot-trades').textContent = String(s.trades);
+  $('#bot-start').disabled = bot.running;
+  $('#bot-stop').disabled = !bot.running;
+  $('#bot-status').textContent = bot.running ? 'Running — watching ticks' : 'Stopped';
+  $('#bot-status').className = 'bot-status' + (bot.running ? ' running' : '');
+  if (app.activeTab === 'bots') renderBotLog();
+}
+function renderBotLog() {
+  const bot = app.activeBot;
+  const el = $('#bot-log');
+  if (!bot || !el) return;
+  el.innerHTML = bot.logs.slice().reverse().map((l) => `<div class="botlog ${l.sev}">${escapeHtml(fmtTime(l.ts / 1000))} · ${escapeHtml(l.msg)}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+  $('#bot-log-count').textContent = `${bot.logs.length} entries`;
+}
+
+class Bot {
+  constructor(settings) {
+    Object.assign(this, settings);
+    this.running = false;
+    this.startedAtMs = 0;
+    this.openMap = new Map();
+    this.closedRows = [];
+    this.seenTx = new Set();
+    this.trades = [];
+    this.lastPlacedAt = 0;
+    this.suppressUntil = 0;
+    this.inTrade = false;
+    this.curStep = 0;
+    this.logs = [];
+  }
+  log(sev, msg) { this.logs.unshift({ sev, msg, ts: Date.now() }); if (this.logs.length > 30) this.logs.pop(); }
+  start() {
+    if (this.running) return;
+    this.running = true;
+    this.startedAtMs = Date.now();
+    this.openMap.clear(); this.closedRows = []; this.seenTx = new Set();
+    this.trades = []; this.curStep = 0; this.inTrade = false;
+    this.log('info', `Bot started: strategy=${this.strategy}, market=${this.market}, contract=${this.contract}, stake=${fmt(this.stake, 2)}, duration=${this.duration}${this.durationUnit}, barrier=${this.barrier}`);
+    subscribeTicks(this.market);
+    renderBots();
+    this.evaluate(app.digitsBySymbol[this.market] || []);
+  }
+  stop(reason) {
+    if (!this.running) return;
+    this.running = false;
+    this.log('info', reason || 'Bot stopped.');
+    renderBots();
+  }
+  onTick() { if (this.running) this.evaluate(app.digitsBySymbol[this.market] || []); }
+
+  shouldStop() {
+    if (!this.running) return true;
+    const s = this.stats();
+    if (this.takeProfit > 0 && s.pnl >= this.takeProfit) return 'Target profit reached — stopping bot.';
+    if (this.stopLoss > 0 && s.pnl <= -this.stopLoss) return 'Stop loss hit — stopping bot.';
+    if (this.maxConsecutiveLosses > 0 && this.consecutiveLosses() >= this.maxConsecutiveLosses) return 'Too many consecutive losses — stopping bot.';
+    return false;
+  }
+  consecutiveLosses() {
+    let n = 0;
+    for (let i = this.closedRows.length - 1; i >= 0; i--) {
+      const pl = numOf(this.closedRows[i], ['pl', 'profit_loss', 'pnl'], 0) || 0;
+      if (pl < 0) n++;
+      else if (pl > 0) break;
+    }
+    return n;
+  }
+  stats() {
+    const openPnl = [...this.openMap.values()].reduce((s, c) => s + (numOf(c, ['pnl', 'profit_loss', 'pl'], 0) || 0), 0);
+    let closedPnl = 0, wins = 0, losses = 0;
+    for (const r of this.closedRows) {
+      const pl = numOf(r, ['pl', 'profit_loss', 'pnl'], 0) || 0;
+      closedPnl += pl;
+      if (pl > 0) wins++; else if (pl < 0) losses++;
+    }
+    const completed = wins + losses;
+    return { pnl: openPnl + closedPnl, wins, losses, completed, winRate: completed ? (wins / completed) * 100 : 0, trades: this.trades.length, openCount: this.openMap.size };
+  }
+  currentStake() {
+    if (this.strategy !== 'martingale') return this.stake;
+    return this.stake * Math.pow(this.multiplier || 2, Math.min(this.curStep, this.maxSteps || 4));
+  }
+  onProfitRow(row) {
+    if (!row || this.strategy !== 'martingale') return;
+    const pl = numOf(row, ['pl', 'profit_loss', 'pnl'], 0) || 0;
+    if (pl > 0 && this.openMap.size === 0) this.curStep = 0;
+    else if (pl < 0) this.curStep = Math.min(this.curStep + 1, this.maxSteps || 4);
+  }
+  updateOpenMap(next) {
+    for (const [id, c] of next) this.openMap.set(id, c);
+    for (const id of [...this.openMap.keys()]) if (!next.has(id)) this.openMap.delete(id);
+    const open = [...this.openMap.values()];
+    this.inTrade = open.length > 0;
+  }
+  decide(digits) {
+    const last = digits[digits.length - 1];
+    if (!last) return null;
+    switch (this.strategy) {
+      case 'digit_streak': {
+        const above = trailingCount(digits, (d) => d.d > this.barrier);
+        const below = trailingCount(digits, (d) => d.d < this.barrier);
+        if (this.direction === 'below') return below >= this.after ? 'UNDER' : null;
+        return above >= this.after ? 'OVER' : null;
+      }
+      case 'digit_freq': {
+        const window = digits.slice(-Math.max(1, this.freqWindow));
+        const d = last.d;
+        const freq = window.filter((x) => x.d === d).length / Math.max(1, window.length);
+        let cond = true;
+        if (this.contract === 'OVER') cond = d > this.barrier;
+        else if (this.contract === 'UNDER') cond = d < this.barrier;
+        return freq >= (this.freqThreshold / 100) && cond ? this.contract : null;
+      }
+      case 'even_odd': {
+        const window = digits.slice(-200);
+        if (!window.length) return null;
+        const evens = window.filter((x) => x.d % 2 === 0).length;
+        const odds = window.length - evens;
+        if (evens - odds >= this.imbalance) return 'ODD';
+        if (odds - evens >= this.imbalance) return 'EVEN';
+        return null;
+      }
+      case 'martingale':
+        return this.inTrade ? null : (this.contract || 'OVER');
+      default:
+        return null;
+    }
+  }
+  evaluate(digits) {
+    if (!this.running) return;
+    const stopReason = this.shouldStop();
+    if (stopReason) { this.stop(stopReason); return; }
+    if (Date.now() < this.suppressUntil) return;
+    if (this.inTrade && this.strategy === 'martingale') return;
+    const decision = this.decide(digits || []);
+    if (decision) this.place(decision);
+  }
+  async place(type) {
+    const bot = this;
+    const amount = bot.currentStake();
+    const params = {
+      symbol: bot.market, contract_type: type, duration: bot.duration || 5,
+      duration_unit: bot.durationUnit || 't', barrier: bot.barrier,
+    };
+    try {
+      const msg = await client.requestWith(proposalRequest(Object.assign({ amount: amount, currency: app.currency, basis: 'payout' }, params)));
+      const id = extractProposalId(msg && msg.proposal ? msg.proposal : msg);
+      try {
+        await client.request('buy', { buy: id, amount, subscribe: 1 });
+      } catch (e) {
+        await client.request('buy', { buy: 1, subscribe: 1, amount, parameters: Object.assign({ amount, currency: app.currency, basis: 'stake' }, params) });
+      }
+      bot.trades.push({ id: String(id ?? ''), type, amount, openedAt: Date.now(), closedAt: null });
+      bot.inTrade = true;
+      bot.suppressUntil = Date.now() + 3000;
+      bot.lastPlacedAt = Date.now();
+      bot.log('info', `Placed ${type} — stake ${amount.toFixed(2)}.`);
+      if (app.activeTab === 'bots') renderBots();
+    } catch (e) {
+      bot.log('error', `Trade failed: ${e.message}`);
+      showToast('error', `Bot trade failed: ${e.message}`);
+    }
+  }
+}
+
+async function startBot() {
+  if (!app.account.id) { showToast('warn', 'Log in first.'); return; }
+  const settings = getBotSettings();
+  if (!settings.stake || settings.stake <= 0) { showToast('warn', 'Base stake must be greater than 0.'); return; }
+  if (app.account.isDemo === false && !(await confirmRealAccount())) return;
+  app.activeBot && app.activeBot.stop('Stopped — replaced by a new bot.');
+  app.activeBot = new Bot(settings);
+  app.activeBot.start();
+}
+function confirmRealAccount() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-card">
+        <h3>Real account warning</h3>
+        <p>You are about to run the bot on your <b>Real</b> account. Bots and automation do not guarantee profit — use with care.</p>
+        <div class="modal-actions">
+          <button class="btn" data-modal="cancel">Cancel</button>
+          <button class="btn btn-primary" data-modal="ok">Run bot</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) { overlay.remove(); resolve(false); } });
+    overlay.querySelector('[data-modal="cancel"]').addEventListener('click', () => { overlay.remove(); resolve(false); });
+    overlay.querySelector('[data-modal="ok"]').addEventListener('click', () => { overlay.remove(); resolve(true); });
+  });
+}
+
+/* ───────────────────────────── wiring ───────────────────────────── */
+function init() {
+  updateHeader();
+  client.on('error', (e) => showToast('error', `Deriv error: ${e.message}`));
+  client.on('close', () => { app.connected = false; showToast('warn', 'Disconnected from Deriv — reconnecting…'); });
+  client.on('tick', onTick);
+  client.on('balance', onBalance);
+  client.on('authorize', onAuthorize);
+  client.on('symbolInfo', onSymbolInfo);
+  client.on('ticksHistory', onTicksHistory);
+  client.on('openPositions', onOpenPositions);
+  client.on('openContract', onOpenContract);
+  client.on('profitTable', onProfitTable);
+  client.on('proposal', (p) => { if (app.activeTab === 'manual') applyProposal(p); });
+  client.connect();
+  checkAutoLogin();
+  populateMarketSelect();
+  populateBotMarket();
+  if (!app.account.id) showToast('info', 'Click "Log in with Deriv" to connect to the Deriv WebSocket API.');
+  updateConnectionStatus();
+
+  $('#login-btn').addEventListener('click', login);
+  $('#logout').addEventListener('click', logout);
+  $('#buy-btn').addEventListener('click', buyCurrent);
+  $('#refresh-btn').addEventListener('click', () => {
+    app.ticksSubs[app.symbol] = false;
+    subscribeTicks(app.symbol);
+    app.digits = app.digitsBySymbol[app.symbol] || [];
+    syncTickDisplay(); drawTickChart();
+    if (app.activeTab === 'analysis') { renderAnalysis(); renderProbTable(); renderHotCold(); }
+    if (app.activeTab === 'entry') renderEntryPoints();
+  });
+  $('#market-select').addEventListener('change', () => {
+    app.symbol = $('#market-select').value;
+    if (!app.ticksSubs[app.symbol]) subscribeTicks(app.symbol);
+    app.digits = app.digitsBySymbol[app.symbol] || [];
+    syncTickDisplay(); drawTickChart(); refreshPayoutPreview();
+    if (app.activeTab === 'analysis') { renderAnalysis(); renderProbTable(); renderHotCold(); }
+    if (app.activeTab === 'entry') renderEntryPoints();
+  });
+  $('#contract-type').addEventListener('change', updateManualUI);
+  $('#contract-type').addEventListener('input', updateManualUI);
+  ['#stake', '#duration', '#duration-unit', '#contract-barrier'].forEach((sel) => {
+    $(sel).addEventListener('change', updateManualUI);
+    $(sel).addEventListener('input', updateManualUI);
+  });
+  $('#window-select').addEventListener('change', () => {
+    app.windowSize = parseInt($('#window-select').value, 10) || 100;
+    if (app.activeTab === 'analysis') { renderAnalysis(); renderProbTable(); renderHotCold(); }
+  });
+  $('#scan-btn').addEventListener('click', runMarketScan);
+  $('#alert-sound').addEventListener('change', () => { app.alertSoundEnabled = $('#alert-sound').checked; });
+  $('#bot-start').addEventListener('click', startBot);
+  $('#bot-stop').addEventListener('click', () => app.activeBot && app.activeBot.stop('Stopped by user.'));
+  $('#bot-strategy').addEventListener('change', () => {
+    $('#strategy-params').innerHTML = strategyParamsHtml($('#bot-strategy').value || 'digit_streak');
+  });
+  window.addEventListener('resize', () => { drawTickChart(); drawBarsChart(); });
+  window.addEventListener('unhandledrejection', (e) => { e.preventDefault(); });
+  $('#strategy-params').innerHTML = strategyParamsHtml($('#bot-strategy').value || 'digit_streak');
+}
+
+init();
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3d09bc00dd47cd4',t:'MTc4OTczNzIxMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
